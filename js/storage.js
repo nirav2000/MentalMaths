@@ -161,6 +161,7 @@ const Storage = {
 
     exportAll(playerId) {
         return {
+            appVersion: APP_VERSION,
             profile: this.getProfile(playerId),
             progress: this.getAllStrategyProgress(playerId),
             sessions: this.getSessions(playerId),

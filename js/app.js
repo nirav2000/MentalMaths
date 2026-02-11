@@ -14,6 +14,7 @@ const App = {
     hintShownForCurrent: false,
 
     init() {
+        document.title = `Mental Maths v${APP_VERSION}`;
         document.querySelectorAll('[id^="version-"]').forEach(el => {
             el.textContent = `v${APP_VERSION}`;
         });
