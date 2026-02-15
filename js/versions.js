@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.16.0',
+        date: '2026-02-15',
+        title: 'Core + Expansion Navigation Bridge Stabilization',
+        current: true,
+        changes: [
+            'Added: Core app/expansion embedded navigation bridge with method-selection interstitial',
+            'Improved: Unified screen transitions now clear transient quiz hint/visual state',
+            'Improved: Global back handling for expansion and core screens',
+            'Updated: Expansion semantic version to v2.24.0 with release notes',
+        ],
+    },
+    {
         version: '1.15.0',
         date: '2026-02-15',
         title: 'Denser Focus Mode + Keypad-First Submit Flow',
-        current: true,
+        current: false,
         changes: [
             'Improved: Practice-focus spacing tightened so more solve UI remains above the fold on mobile',
             'Updated: Facts, levels, and word-problem flows now use keypad-first submit with integrated ✓ action',
