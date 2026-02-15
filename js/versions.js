@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.17.0',
+        date: '2026-02-15',
+        title: 'Focus Mode Ultra-Compact Layout Pass',
+        current: true,
+        changes: [
+            'Improved: Focus mode spacing compressed further across problem area, keypad, feedback, and headers',
+            'Improved: Adaptive equation sizing with tighter vertical rhythm for short/mobile screens',
+            'Improved: Session mini-stats auto-hide on short viewports to keep solve controls above fold',
+            'Updated: Expansion semantic version to v2.25.0 with release notes',
+        ],
+    },
+    {
         version: '1.16.0',
         date: '2026-02-15',
         title: 'Core + Expansion Navigation Bridge Stabilization',
-        current: true,
+        current: false,
         changes: [
             'Added: Core app/expansion embedded navigation bridge with method-selection interstitial',
             'Improved: Unified screen transitions now clear transient quiz hint/visual state',

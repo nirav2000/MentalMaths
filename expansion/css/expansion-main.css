@@ -597,11 +597,57 @@ body.practice-focus #expansion-root {
   padding-top: 0.2rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+  padding-bottom: 0.3rem;
 }
 
 body.practice-focus .card {
   margin-bottom: 0.5rem;
   padding: 0.75rem;
+}
+
+body.practice-focus .practice-container,
+body.practice-focus .practice-card,
+body.practice-focus .word-problem-container {
+  margin: 0 auto;
+}
+
+body.practice-focus .problem-display {
+  padding: 1rem 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+body.practice-focus .problem-equation {
+  margin-bottom: 0.6rem;
+  line-height: 1.1;
+  font-size: clamp(1.8rem, 5.8vw, 2.4rem);
+}
+
+body.practice-focus .answer-input-container,
+body.practice-focus .answer-input-section,
+body.practice-focus .word-problem-answer-section {
+  margin-bottom: 0.55rem;
+  gap: 0.55rem;
+  padding: 0.7rem;
+}
+
+body.practice-focus .touch-keypad {
+  margin: 0.25rem auto 0.45rem;
+  gap: 0.4rem;
+}
+
+body.practice-focus .keypad-help {
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+body.practice-focus .feedback {
+  margin-top: 0.55rem;
+  padding: 0.8rem;
+}
+
+body.practice-focus .session-stats-mini {
+  margin-top: 0.35rem;
+  gap: 0.35rem;
 }
 
 body.practice-focus .practice-header {
@@ -692,14 +738,33 @@ body.practice-focus .progress-badge {
     padding-top: 0.15rem;
     padding-left: 0.35rem;
     padding-right: 0.35rem;
+    padding-bottom: 0.2rem;
   }
 
   body.practice-focus .session-stats-mini {
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
   }
 
   body.practice-focus .bottom-nav {
     display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  body.practice-focus .practice-header {
+    margin-bottom: 0.45rem;
+    padding: 0.4rem;
+  }
+
+  body.practice-focus .session-stats-mini {
+    display: none;
+  }
+
+  body.practice-focus .focus-back-btn,
+  body.practice-focus .focus-icon-btn {
+    min-height: 36px;
+    min-width: 36px;
+    font-size: 0.85rem;
   }
 }
 
