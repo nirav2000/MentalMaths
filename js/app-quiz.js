@@ -2,6 +2,53 @@
 
 Object.assign(App, {
 
+    isWordProblemQuestion(question) {
+        return !!(
+            question && (
+                question.type === 'word-problem' ||
+                question.module === 'expansion-word-problem' ||
+                question.strategyId === 'word-problems'
+            )
+        );
+    },
+
+    async renderExpansionWordProblem(question) {
+        const numpad = document.getElementById('numpad');
+        if (numpad) numpad.classList.add('hidden');
+
+        const hintEl = document.getElementById('quiz-hint');
+        const visualEl = document.getElementById('quiz-visual');
+        if (hintEl) hintEl.classList.add('hidden');
+        if (!visualEl) return;
+
+        try {
+            const bridge = await this.ensureExpansionBridge();
+            if (!bridge?.renderWordProblem) return;
+
+            const problem = question.expansionProblem || {
+                text: question.questionText,
+                answer: question.answer,
+                numberSentence: question.numberSentence || '',
+                scaffolding: question.scaffolding || {}
+            };
+
+            visualEl.innerHTML = '';
+            visualEl.classList.remove('hidden');
+            visualEl.appendChild(bridge.renderWordProblem(problem, {
+                showScaffoldingButtons: true,
+                onAnswer: (correct, userAnswer) => {
+                    this.currentAnswer = String(userAnswer ?? '');
+                    if (!this.showingFeedback) {
+                        this.submitAnswer();
+                    }
+                }
+            }));
+            this.wordProblemInputActive = true;
+        } catch (error) {
+            console.warn('Failed to load expansion word problem UI bridge:', error);
+        }
+    },
+
     startPractice(specificStrategy, options = {}) {
         const pid = this.currentPlayer.id;
         this.practiceMode = options.practiceMode || false;
@@ -73,6 +120,7 @@ Object.assign(App, {
         this.sessionAskedTexts.add(question.questionText);
 
         this.currentQuestion = { ...question, strategyId: qPlan.strategyId };
+        this.wordProblemInputActive = false;
         this.currentAnswer = '';
         this.questionStartTime = Date.now();
         this.showingFeedback = false;
@@ -89,6 +137,8 @@ Object.assign(App, {
         document.getElementById('quiz-streak').innerHTML = `&#x1f525; ${this.streak}`;
         document.getElementById('quiz-question').textContent = question.questionText;
         document.getElementById('quiz-answer-display').innerHTML = '&nbsp;';
+        const numpad = document.getElementById('numpad');
+        if (numpad) numpad.classList.remove('hidden');
 
         // Avatar
         this.updateAvatar('neutral');
@@ -115,6 +165,10 @@ Object.assign(App, {
             visualEl.classList.add('hidden');
         }
 
+        if (this.isWordProblemQuestion(this.currentQuestion)) {
+            this.renderExpansionWordProblem(this.currentQuestion);
+        }
+
         // Hide feedback & encouragement
         const fb = document.getElementById('quiz-feedback');
         fb.classList.add('hidden');
@@ -124,6 +178,7 @@ Object.assign(App, {
     },
 
     handleNumpad(val) {
+        if (this.wordProblemInputActive) return;
         if (this.showingFeedback) return;
         if (val === 'del') {
             this.currentAnswer = this.currentAnswer.slice(0, -1);

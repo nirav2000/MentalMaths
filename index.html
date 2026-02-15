@@ -63,11 +63,26 @@
                     <div class="expansion-icon">📖</div>
                     <h3 class="expansion-title">Addition & Subtraction Expansion</h3>
                     <p class="expansion-description">Master mental math strategies, practice with larger numbers, and solve word problems!</p>
-                    <a href="expansion/expansion.html" class="btn btn-primary expansion-btn">Explore Expansion Module →</a>
+                    <button id="btn-open-expansion" class="btn btn-primary expansion-btn">Explore Expansion Module →</button>
                 </div>
             </div>
         </div>
         <div class="version-tag version-link" id="version-home"></div>
+    </div>
+
+    <!-- Method Selection Interstitial (for expansion launch) -->
+    <div id="screen-method-select" class="screen">
+        <div class="settings-header">
+            <button id="btn-back-from-method-select" class="btn btn-icon">&larr;</button>
+            <h2>Choose a Strategy</h2>
+            <div style="width:44px;"></div>
+        </div>
+        <div id="method-select-content" class="settings-content"></div>
+    </div>
+
+    <!-- Expansion Module Host (loaded dynamically into main DOM) -->
+    <div id="screen-expansion" class="screen">
+        <div id="expansion-shell" class="expansion-shell"></div>
     </div>
 
     <!-- Quiz Screen -->

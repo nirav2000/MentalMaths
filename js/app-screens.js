@@ -2,6 +2,41 @@
 
 Object.assign(App, {
 
+    // ----- Expansion Method Interstitial -----
+
+    showMethodSelect() {
+        const container = document.getElementById('method-select-content');
+        const methods = [
+            { id: 'partitioning', name: 'Partitioning', desc: 'Break numbers into place-value chunks.' },
+            { id: 'compensation', name: 'Compensation', desc: 'Adjust numbers to make calculations easier.' },
+            { id: 'bridging-10', name: 'Bridging Through 10', desc: 'Jump through friendly tens for speed.' },
+            { id: 'mixed', name: 'Let Expansion Choose', desc: 'Auto-pick a suitable strategy per problem.' }
+        ];
+
+        container.innerHTML = `
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">
+                Pick a method before entering the Expansion module.
+            </p>
+            <div class="method-select-list">
+                ${methods.map((m) => `
+                    <button class="btn method-select-card" data-method="${m.id}">
+                        <strong>${m.name}</strong>
+                        <small>${m.desc}</small>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+
+        container.querySelectorAll('[data-method]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                this.selectedExpansionMethod = btn.dataset.method;
+                await this.launchExpansion();
+            });
+        });
+
+        this.showScreen('screen-method-select');
+    },
+
     // ----- Stats -----
 
     showStats() {
