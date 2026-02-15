@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.10.0',
+        date: '2026-02-15',
+        title: 'Expansion Practice Flow Options',
+        current: true,
+        changes: [
+            'Added: Expansion setting to auto-advance to the next question after a correct answer',
+            'Added: Expansion setting to auto-focus the answer input for each new question',
+            'Improved: Smoother practice flow in facts and progressive levels screens',
+            'Updated: Expansion module semantic version to v2.18.0 with release notes',
+        ],
+    },
+    {
         version: '1.9.0',
         date: '2026-02-12',
         title: 'Section Tabs - Root Cause Fixed (CSS Contrast Issue)',
-        current: true,
+        current: false,
         changes: [
             'ROOT CAUSE: Section tabs were ALWAYS rendering but invisible due to low contrast',
             'PROBLEM: Dark gray buttons (#1a1a1a) on dark background (#0a0a0a) with no visible borders',

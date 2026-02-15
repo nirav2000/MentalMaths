@@ -4,7 +4,7 @@
  */
 
 import { COLOURS, PROGRESSION_LEVELS, METHOD_DEFINITIONS, ADDITION_STRATEGIES, SUBTRACTION_STRATEGIES } from './expansion-config.js';
-import { loadExpansionData } from './data/expansion-storage.js';
+import { loadExpansionData, saveExpansionData } from './data/expansion-storage.js';
 import { startPractice as startAdditionPractice, getNextProblem as getNextAdditionProblem, submitAnswer as submitAdditionAnswer, endPractice as endAdditionPractice, getCurrentSession as getCurrentAdditionSession } from './facts/addition-practice.js';
 import { startPractice as startSubtractionPractice, getNextProblem as getNextSubtractionProblem, submitAnswer as submitSubtractionAnswer, endPractice as endSubtractionPractice, getCurrentSession as getCurrentSubtractionSession } from './facts/subtraction-practice.js';
 import { renderFactGrid } from './facts/fact-grid.js';
@@ -67,6 +67,77 @@ let wordProblemsScreenState = {
   sessionResults: [],
   scaffoldingLevel: 0
 };
+
+const DEFAULT_PRACTICE_PREFERENCES = {
+  autoAdvanceOnCorrect: false,
+  autoFocusInput: true
+};
+
+function getPracticePreferences() {
+  return {
+    ...DEFAULT_PRACTICE_PREFERENCES,
+    ...(expansionData?.preferences?.practice || {})
+  };
+}
+
+function updatePracticePreference(key, value) {
+  if (!expansionData) return;
+
+  expansionData.preferences = expansionData.preferences || {};
+  expansionData.preferences.practice = {
+    ...DEFAULT_PRACTICE_PREFERENCES,
+    ...(expansionData.preferences.practice || {}),
+    [key]: value
+  };
+
+  saveExpansionData(expansionData);
+}
+
+function renderPracticeOptions() {
+  const prefs = getPracticePreferences();
+
+  return `
+    <div class="practice-options" id="practice-options">
+      <label class="practice-option-toggle">
+        <input type="checkbox" id="auto-advance-toggle" ${prefs.autoAdvanceOnCorrect ? 'checked' : ''}>
+        <span>Auto-next on correct answer</span>
+      </label>
+      <label class="practice-option-toggle">
+        <input type="checkbox" id="auto-focus-toggle" ${prefs.autoFocusInput ? 'checked' : ''}>
+        <span>Auto-focus answer box</span>
+      </label>
+    </div>
+  `;
+}
+
+function bindPracticeOptions() {
+  const autoAdvanceToggle = document.getElementById('auto-advance-toggle');
+  const autoFocusToggle = document.getElementById('auto-focus-toggle');
+
+  if (autoAdvanceToggle) {
+    autoAdvanceToggle.addEventListener('change', (e) => {
+      updatePracticePreference('autoAdvanceOnCorrect', e.target.checked);
+    });
+  }
+
+  if (autoFocusToggle) {
+    autoFocusToggle.addEventListener('change', (e) => {
+      updatePracticePreference('autoFocusInput', e.target.checked);
+    });
+  }
+}
+
+function focusAnswerInput() {
+  if (!getPracticePreferences().autoFocusInput) return;
+
+  setTimeout(() => {
+    const input = document.getElementById('answer-input');
+    if (input && !input.disabled) {
+      input.focus();
+      input.select?.();
+    }
+  }, 120);
+}
 
 /**
  * Initializes the expansion app.
@@ -511,8 +582,10 @@ function renderPracticeScreen(root, operation = 'addition') {
     </div>
 
     <div class="answer-input-container">
-      <input type="number" id="answer-input" class="answer-input" placeholder="?" autofocus />
+      <input type="number" id="answer-input" class="answer-input" placeholder="?" />
     </div>
+
+    ${renderPracticeOptions()}
 
     <div class="practice-buttons">
       <button class="btn btn-submit" id="submit-btn">Submit Answer</button>
@@ -538,6 +611,15 @@ function renderPracticeScreen(root, operation = 'addition') {
       handleSubmit(operation);
     }
   });
+
+  bindPracticeOptions();
+  focusAnswerInput();
+}
+
+function goToNextFactProblem(screenName) {
+  currentProblem = null;
+  showingHint = false;
+  renderScreen(screenName);
 }
 
 function handleSubmit(operation = 'addition') {
@@ -549,6 +631,7 @@ function handleSubmit(operation = 'addition') {
   const isAddition = operation === 'addition';
   const result = isAddition ? submitAdditionAnswer(answer) : submitSubtractionAnswer(answer);
   const screenName = isAddition ? 'addition-facts' : 'subtraction-facts';
+  const preferences = getPracticePreferences();
 
   // Update input styling
   input.className = `answer-input ${result.correct ? 'correct' : 'incorrect'}`;
@@ -561,15 +644,18 @@ function handleSubmit(operation = 'addition') {
       ${result.feedback}
       ${result.correct ? '' : ` You answered ${answer}.`}
       <br><br>
-      <button class="btn btn-primary" id="next-btn">Next Problem</button>
+      ${result.correct && preferences.autoAdvanceOnCorrect
+        ? '<em>Moving to the next problem…</em>'
+        : '<button class="btn btn-primary" id="next-btn">Next Problem</button>'}
     </div>
   `;
 
-  document.getElementById('next-btn').addEventListener('click', () => {
-    currentProblem = null;
-    showingHint = false;
-    renderScreen(screenName);
-  });
+  if (result.correct && preferences.autoAdvanceOnCorrect) {
+    setTimeout(() => goToNextFactProblem(screenName), 900);
+    return;
+  }
+
+  document.getElementById('next-btn').addEventListener('click', () => goToNextFactProblem(screenName));
 }
 
 function showHint() {
@@ -781,9 +867,10 @@ function renderPracticeProblem(root) {
         <div class="problem-equation">${a} ${operation} ${b} = ?</div>
       </div>
       <div class="answer-input-section">
-        <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" autofocus />
+        <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" />
         <button class="btn btn-primary btn-large" id="submit-answer">Check Answer</button>
       </div>
+      ${renderPracticeOptions()}
       <div id="feedback-area" class="feedback-area"></div>
     </div>
     <div class="session-stats-mini">
@@ -803,6 +890,7 @@ function renderPracticeProblem(root) {
   `;
 
   const submitAnswer = () => {
+    const preferences = getPracticePreferences();
     const userAnswer = parseInt(document.getElementById('answer-input').value);
     if (isNaN(userAnswer)) return;
 
@@ -826,8 +914,7 @@ function renderPracticeProblem(root) {
       feedbackArea.className = 'feedback-area feedback-incorrect-anim';
     }
 
-    document.getElementById('submit-answer').textContent = 'Next Problem →';
-    document.getElementById('submit-answer').onclick = () => {
+    const goToNextProblem = () => {
       levelsScreenState.currentIndex++;
       if (levelsScreenState.currentIndex < levelsScreenState.problemSet.length) {
         levelsScreenState.currentProblem = levelsScreenState.problemSet[levelsScreenState.currentIndex];
@@ -836,6 +923,14 @@ function renderPracticeProblem(root) {
         renderScreen('levels');
       }
     };
+
+    if (correct && preferences.autoAdvanceOnCorrect) {
+      setTimeout(goToNextProblem, 900);
+    } else {
+      document.getElementById('submit-answer').textContent = 'Next Problem →';
+      document.getElementById('submit-answer').onclick = goToNextProblem;
+    }
+
     document.getElementById('answer-input').disabled = true;
   };
 
@@ -853,7 +948,8 @@ function renderPracticeProblem(root) {
     }
   });
 
-  setTimeout(() => document.getElementById('answer-input').focus(), 100);
+  bindPracticeOptions();
+  focusAnswerInput();
 }
 
 function renderPracticeResults(root) {

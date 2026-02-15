@@ -146,6 +146,27 @@
   background-color: rgba(229, 115, 115, 0.1);
 }
 
+
+.practice-options {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.practice-option-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.practice-option-toggle input {
+  width: 1rem;
+  height: 1rem;
+}
 /* Buttons */
 .practice-buttons {
   display: flex;
