@@ -6,10 +6,23 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.14.0',
+        date: '2026-02-15',
+        title: 'Mobile Input & Scroll UX Improvements',
+        current: true,
+        changes: [
+            'Improved: Word problem layout puts answer input earlier to reduce scrolling before answering',
+            'Added: Touch keypad for word problems, facts practice, and progressive levels practice',
+            'Improved: Word problem mobile sticky answer area for faster answer entry',
+            'Improved: Compact mobile spacing in practice screens to reduce vertical scrolling',
+            'Updated: Expansion semantic version to v2.22.0 with release notes',
+        ],
+    },
+    {
         version: '1.13.0',
         date: '2026-02-15',
         title: 'Visual Demo Interaction Upgrade + Mobile Layout Fixes',
-        current: true,
+        current: false,
         changes: [
             'Added: Selectable number-line interaction so learners can tap landing points and show jump strategy',
             'Added: Base-10 design style tabs (Classic, Pastel, High Contrast, Outline)',

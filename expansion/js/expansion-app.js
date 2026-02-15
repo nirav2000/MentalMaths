@@ -139,6 +139,37 @@ function focusAnswerInput() {
   }, 120);
 }
 
+function renderTouchKeypad(keypadId) {
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', 'C'];
+  return `
+    <div class="touch-keypad" id="${keypadId}">
+      ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}
+    </div>
+  `;
+}
+
+function bindTouchKeypad(inputId, keypadId, onEnter = null) {
+  const input = document.getElementById(inputId);
+  const keypad = document.getElementById(keypadId);
+  if (!input || !keypad) return;
+
+  keypad.addEventListener('click', (e) => {
+    const key = e.target?.dataset?.key;
+    if (!key || input.disabled) return;
+
+    if (key === '⌫') {
+      input.value = input.value.slice(0, -1);
+    } else if (key === 'C') {
+      input.value = '';
+    } else {
+      input.value += key;
+    }
+
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    if (onEnter && key === '↵') onEnter();
+  });
+}
+
 /**
  * Initializes the expansion app.
  */
@@ -585,6 +616,8 @@ function renderPracticeScreen(root, operation = 'addition') {
       <input type="number" id="answer-input" class="answer-input" placeholder="?" />
     </div>
 
+    ${renderTouchKeypad('facts-keypad')}
+
     ${renderPracticeOptions()}
 
     <div class="practice-buttons">
@@ -613,6 +646,7 @@ function renderPracticeScreen(root, operation = 'addition') {
   });
 
   bindPracticeOptions();
+  bindTouchKeypad('answer-input', 'facts-keypad');
   focusAnswerInput();
 }
 
@@ -870,6 +904,7 @@ function renderPracticeProblem(root) {
         <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" />
         <button class="btn btn-primary btn-large" id="submit-answer">Check Answer</button>
       </div>
+      ${renderTouchKeypad('levels-keypad')}
       ${renderPracticeOptions()}
       <div id="feedback-area" class="feedback-area"></div>
     </div>
@@ -949,6 +984,7 @@ function renderPracticeProblem(root) {
   });
 
   bindPracticeOptions();
+  bindTouchKeypad('answer-input', 'levels-keypad');
   focusAnswerInput();
 }
 

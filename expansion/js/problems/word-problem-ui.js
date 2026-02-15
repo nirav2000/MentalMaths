@@ -3,6 +3,27 @@
 
 import { PartWholeVisual } from '../visuals/part-whole-model.js';
 
+function renderWordProblemKeypad() {
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', 'C'];
+  return `
+    <div class="touch-keypad word-keypad" id="word-keypad">
+      ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}
+    </div>
+  `;
+}
+
+function bindWordProblemKeypad(input, keypad) {
+  if (!input || !keypad) return;
+  keypad.addEventListener('click', (e) => {
+    const key = e.target?.dataset?.key;
+    if (!key || input.disabled) return;
+    if (key === '⌫') input.value = input.value.slice(0, -1);
+    else if (key === 'C') input.value = '';
+    else input.value += key;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
 export function renderWordProblem(problem, options = {}) {
   const {
     onAnswer,
@@ -20,13 +41,27 @@ export function renderWordProblem(problem, options = {}) {
   textSection.innerHTML = `<p class="problem-text">${problem.text}</p>`;
   container.appendChild(textSection);
 
+  // Answer input section
+  const answerSection = document.createElement('div');
+  answerSection.className = 'word-problem-answer-section';
+  answerSection.innerHTML = `
+    <div class="answer-input-group">
+      <label class="answer-label">Your Answer:</label>
+      <input type="number" class="answer-input" placeholder="Type your answer" />
+      <button class="btn btn-primary">Check Answer</button>
+    </div>
+    ${renderWordProblemKeypad()}
+    <div class="answer-feedback"></div>
+  `;
+  container.appendChild(answerSection);
+
   // Scaffolding section (initially hidden)
   const scaffoldingSection = document.createElement('div');
   scaffoldingSection.className = 'scaffolding-section';
   scaffoldingSection.style.display = 'none';
   container.appendChild(scaffoldingSection);
 
-  // Scaffolding buttons
+  // Scaffolding buttons (moved below answer to reduce scroll-to-answer)
   if (showScaffoldingButtons) {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'scaffolding-buttons';
@@ -46,15 +81,12 @@ export function renderWordProblem(problem, options = {}) {
     `;
     container.appendChild(buttonsContainer);
 
-    // Add click handlers for scaffolding buttons
     buttonsContainer.querySelectorAll('button[data-level]').forEach(btn => {
       btn.addEventListener('click', () => {
         const level = parseInt(btn.dataset.level);
         showScaffolding(scaffoldingSection, problem, level);
         scaffoldingSection.style.display = 'block';
         if (onScaffoldingUsed) onScaffoldingUsed(level);
-
-        // Disable this and previous buttons
         buttonsContainer.querySelectorAll('button[data-level]').forEach(b => {
           if (parseInt(b.dataset.level) <= level) {
             b.disabled = true;
@@ -65,23 +97,11 @@ export function renderWordProblem(problem, options = {}) {
     });
   }
 
-  // Answer input section
-  const answerSection = document.createElement('div');
-  answerSection.className = 'word-problem-answer-section';
-  answerSection.innerHTML = `
-    <div class="answer-input-group">
-      <label class="answer-label">Your Answer:</label>
-      <input type="number" class="answer-input" placeholder="Type your answer" />
-      <button class="btn btn-primary">Check Answer</button>
-    </div>
-    <div class="answer-feedback"></div>
-  `;
-  container.appendChild(answerSection);
-
   // Handle answer submission
   const input = answerSection.querySelector('.answer-input');
   const button = answerSection.querySelector('.btn');
   const feedback = answerSection.querySelector('.answer-feedback');
+  bindWordProblemKeypad(input, answerSection.querySelector('#word-keypad'));
 
   const handleSubmit = () => {
     const userAnswer = parseInt(input.value);

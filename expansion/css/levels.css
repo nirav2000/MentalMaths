@@ -207,6 +207,25 @@
   font-weight: 600;
 }
 
+@media (max-width: 768px) {
+  .practice-card {
+    padding: 1.25rem 0.9rem;
+  }
+
+  .problem-equation {
+    font-size: 2.1rem;
+  }
+
+  .answer-input-section {
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .session-stats-mini {
+    gap: 0.5rem;
+  }
+}
+
 .feedback-correct {
   background: #e8f5e9;
   color: #2e7d32;

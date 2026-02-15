@@ -146,6 +146,27 @@
   background-color: rgba(229, 115, 115, 0.1);
 }
 
+.touch-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(58px, 80px));
+  gap: 0.45rem;
+  justify-content: center;
+  margin: 0.5rem auto 1rem;
+}
+
+.keypad-key {
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  min-height: 44px;
+}
+
+.keypad-key:active {
+  background: #e3f2fd;
+}
+
 
 .practice-options {
   display: flex;
@@ -225,6 +246,24 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .problem-display {
+    padding: 1.5rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .problem-equation {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .answer-input {
+    width: min(170px, 100%);
+    font-size: 2rem;
+    padding: 0.75rem;
   }
 }
 
