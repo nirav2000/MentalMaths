@@ -4,7 +4,7 @@
 import { PartWholeVisual } from '../visuals/part-whole-model.js';
 
 function renderWordProblemKeypad() {
-  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', 'C'];
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'];
   return `
     <div class="touch-keypad word-keypad" id="word-keypad">
       ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}
@@ -12,13 +12,16 @@ function renderWordProblemKeypad() {
   `;
 }
 
-function bindWordProblemKeypad(input, keypad) {
+function bindWordProblemKeypad(input, keypad, onEnter = null) {
   if (!input || !keypad) return;
   keypad.addEventListener('click', (e) => {
     const key = e.target?.dataset?.key;
     if (!key || input.disabled) return;
     if (key === '⌫') input.value = input.value.slice(0, -1);
-    else if (key === 'C') input.value = '';
+    else if (key === '✓') {
+      if (onEnter) onEnter();
+      return;
+    }
     else input.value += key;
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
@@ -48,9 +51,9 @@ export function renderWordProblem(problem, options = {}) {
     <div class="answer-input-group">
       <label class="answer-label">Your Answer:</label>
       <input type="number" class="answer-input" placeholder="Type your answer" />
-      <button class="btn btn-primary">Check Answer</button>
     </div>
     ${renderWordProblemKeypad()}
+    <p class="keypad-help">Tap <strong>✓</strong> on keypad to check answer.</p>
     <div class="answer-feedback"></div>
   `;
   container.appendChild(answerSection);
@@ -99,9 +102,7 @@ export function renderWordProblem(problem, options = {}) {
 
   // Handle answer submission
   const input = answerSection.querySelector('.answer-input');
-  const button = answerSection.querySelector('.btn');
   const feedback = answerSection.querySelector('.answer-feedback');
-  bindWordProblemKeypad(input, answerSection.querySelector('#word-keypad'));
 
   const handleSubmit = () => {
     const userAnswer = parseInt(input.value);
@@ -120,7 +121,6 @@ export function renderWordProblem(problem, options = {}) {
         </div>
       `;
       input.disabled = true;
-      button.disabled = true;
     } else {
       feedback.innerHTML = `
         <div class="feedback-incorrect">
@@ -136,10 +136,10 @@ export function renderWordProblem(problem, options = {}) {
     }
   };
 
-  button.addEventListener('click', handleSubmit);
   input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleSubmit();
   });
+  bindWordProblemKeypad(input, answerSection.querySelector('#word-keypad'), handleSubmit);
 
   // Auto-focus input after a brief delay
   setTimeout(() => input.focus(), 100);

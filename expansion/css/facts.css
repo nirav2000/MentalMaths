@@ -116,7 +116,7 @@
   flex-direction: column;
   gap: 1rem;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .answer-input {
@@ -148,23 +148,40 @@
 
 .touch-keypad {
   display: grid;
-  grid-template-columns: repeat(3, minmax(58px, 80px));
-  gap: 0.45rem;
+  grid-template-columns: repeat(3, minmax(78px, 112px));
+  gap: 0.55rem;
   justify-content: center;
-  margin: 0.5rem auto 1rem;
+  margin: 0.4rem auto 0.75rem;
 }
 
 .keypad-key {
-  border: 1px solid #cfd8dc;
-  border-radius: 10px;
+  border: 1px solid #b0bec5;
+  border-radius: 12px;
   background: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
-  min-height: 44px;
+  font-size: 1.45rem;
+  font-weight: 700;
+  min-height: 58px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .keypad-key:active {
   background: #e3f2fd;
+  transform: scale(0.96);
+}
+
+.keypad-key[data-key="⌫"] {
+  background: #f5f5f5;
+}
+
+.keypad-key[data-key="✓"] {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.keypad-help {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--color-text-light);
+  font-size: 0.92rem;
 }
 
 
@@ -264,6 +281,17 @@
     width: min(170px, 100%);
     font-size: 2rem;
     padding: 0.75rem;
+  }
+
+  .touch-keypad {
+    grid-template-columns: repeat(3, minmax(86px, 1fr));
+    width: min(100%, 320px);
+    gap: 0.5rem;
+  }
+
+  .keypad-key {
+    min-height: 62px;
+    font-size: 1.5rem;
   }
 }
 

@@ -93,36 +93,36 @@ function updatePracticePreference(key, value) {
   saveExpansionData(expansionData);
 }
 
-function renderPracticeOptions() {
+function renderPracticeOptionMenuItems() {
   const prefs = getPracticePreferences();
 
   return `
-    <div class="practice-options" id="practice-options">
-      <label class="practice-option-toggle">
-        <input type="checkbox" id="auto-advance-toggle" ${prefs.autoAdvanceOnCorrect ? 'checked' : ''}>
-        <span>Auto-next on correct answer</span>
-      </label>
-      <label class="practice-option-toggle">
-        <input type="checkbox" id="auto-focus-toggle" ${prefs.autoFocusInput ? 'checked' : ''}>
-        <span>Auto-focus answer box</span>
-      </label>
-    </div>
+    <button class="focus-menu-item" id="toggle-auto-advance" aria-pressed="${prefs.autoAdvanceOnCorrect}">
+      ${prefs.autoAdvanceOnCorrect ? '✅' : '⬜️'} Auto-next on correct
+    </button>
+    <button class="focus-menu-item" id="toggle-auto-focus" aria-pressed="${prefs.autoFocusInput}">
+      ${prefs.autoFocusInput ? '✅' : '⬜️'} Auto-focus answer
+    </button>
   `;
 }
 
-function bindPracticeOptions() {
-  const autoAdvanceToggle = document.getElementById('auto-advance-toggle');
-  const autoFocusToggle = document.getElementById('auto-focus-toggle');
+function bindPracticeOptionMenu() {
+  const autoAdvanceToggle = document.getElementById('toggle-auto-advance');
+  const autoFocusToggle = document.getElementById('toggle-auto-focus');
 
   if (autoAdvanceToggle) {
-    autoAdvanceToggle.addEventListener('change', (e) => {
-      updatePracticePreference('autoAdvanceOnCorrect', e.target.checked);
+    autoAdvanceToggle.addEventListener('click', () => {
+      const prefs = getPracticePreferences();
+      updatePracticePreference('autoAdvanceOnCorrect', !prefs.autoAdvanceOnCorrect);
+      renderScreen(currentScreen);
     });
   }
 
   if (autoFocusToggle) {
-    autoFocusToggle.addEventListener('change', (e) => {
-      updatePracticePreference('autoFocusInput', e.target.checked);
+    autoFocusToggle.addEventListener('click', () => {
+      const prefs = getPracticePreferences();
+      updatePracticePreference('autoFocusInput', !prefs.autoFocusInput);
+      renderScreen(currentScreen);
     });
   }
 }
@@ -140,7 +140,7 @@ function focusAnswerInput() {
 }
 
 function renderTouchKeypad(keypadId) {
-  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', 'C'];
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'];
   return `
     <div class="touch-keypad" id="${keypadId}">
       ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}
@@ -159,14 +159,14 @@ function bindTouchKeypad(inputId, keypadId, onEnter = null) {
 
     if (key === '⌫') {
       input.value = input.value.slice(0, -1);
-    } else if (key === 'C') {
-      input.value = '';
+    } else if (key === '✓') {
+      if (onEnter) onEnter();
+      return;
     } else {
       input.value += key;
     }
 
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    if (onEnter && key === '↵') onEnter();
   });
 }
 
@@ -654,6 +654,7 @@ function renderPracticeScreen(root, operation = 'addition') {
         <div class="focus-menu-wrap">
           <button class="focus-icon-btn" id="practice-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
           <div class="focus-menu" id="practice-menu">
+            ${renderPracticeOptionMenuItems()}
             <button class="focus-menu-item" id="quit-btn">Quit Session</button>
           </div>
         </div>
@@ -676,10 +677,8 @@ function renderPracticeScreen(root, operation = 'addition') {
 
     ${renderTouchKeypad('facts-keypad')}
 
-    ${renderPracticeOptions()}
-
     <div class="practice-buttons">
-      <button class="btn btn-submit" id="submit-btn">Submit Answer</button>
+      <p class="keypad-help">Tap <strong>✓</strong> on keypad to submit.</p>
     </div>
 
     <div id="feedback-area"></div>
@@ -699,7 +698,6 @@ function renderPracticeScreen(root, operation = 'addition') {
     showingHint = false;
     renderScreen(screenName);
   });
-  document.getElementById('submit-btn').addEventListener('click', () => handleSubmit(operation));
   document.getElementById('hint-btn').addEventListener('click', showHint);
   document.getElementById('quit-btn').addEventListener('click', () => {
     const summary = isAddition ? endAdditionPractice() : endSubtractionPractice();
@@ -714,8 +712,8 @@ function renderPracticeScreen(root, operation = 'addition') {
     }
   });
 
-  bindPracticeOptions();
-  bindTouchKeypad('answer-input', 'facts-keypad');
+  bindPracticeOptionMenu();
+  bindTouchKeypad('answer-input', 'facts-keypad', () => handleSubmit(operation));
   focusAnswerInput();
 }
 
@@ -749,7 +747,7 @@ function handleSubmit(operation = 'addition') {
       <br><br>
       ${result.correct && preferences.autoAdvanceOnCorrect
         ? '<em>Moving to the next problem…</em>'
-        : '<button class="btn btn-primary" id="next-btn">Next Problem</button>'}
+        : '<div class="keypad-help"><strong>Tap ✓</strong> for next problem.</div>'}
     </div>
   `;
 
@@ -758,7 +756,7 @@ function handleSubmit(operation = 'addition') {
     return;
   }
 
-  document.getElementById('next-btn').addEventListener('click', () => goToNextFactProblem(screenName));
+  bindTouchKeypad('answer-input', 'facts-keypad', () => goToNextFactProblem(screenName));
 }
 
 function showHint() {
@@ -966,6 +964,7 @@ function renderPracticeProblem(root) {
       <div class="focus-menu-wrap">
         <button class="focus-icon-btn" id="levels-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
         <div class="focus-menu" id="levels-menu">
+          ${renderPracticeOptionMenuItems()}
           <button class="focus-menu-item" id="end-practice">End Practice</button>
         </div>
       </div>
@@ -976,10 +975,9 @@ function renderPracticeProblem(root) {
       </div>
       <div class="answer-input-section">
         <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" />
-        <button class="btn btn-primary btn-large" id="submit-answer">Check Answer</button>
       </div>
       ${renderTouchKeypad('levels-keypad')}
-      ${renderPracticeOptions()}
+      <p class="keypad-help">Tap <strong>✓</strong> on keypad to check / continue.</p>
       <div id="feedback-area" class="feedback-area"></div>
     </div>
     <div class="session-stats-mini">
@@ -998,7 +996,24 @@ function renderPracticeProblem(root) {
     </div>
   `;
 
+  let awaitingNext = false;
+
+  const goToNextProblem = () => {
+    levelsScreenState.currentIndex++;
+    if (levelsScreenState.currentIndex < levelsScreenState.problemSet.length) {
+      levelsScreenState.currentProblem = levelsScreenState.problemSet[levelsScreenState.currentIndex];
+      renderScreen('levels');
+    } else {
+      renderScreen('levels');
+    }
+  };
+
   const submitAnswer = () => {
+    if (awaitingNext) {
+      goToNextProblem();
+      return;
+    }
+
     const preferences = getPracticePreferences();
     const userAnswer = parseInt(document.getElementById('answer-input').value);
     if (isNaN(userAnswer)) return;
@@ -1023,27 +1038,16 @@ function renderPracticeProblem(root) {
       feedbackArea.className = 'feedback-area feedback-incorrect-anim';
     }
 
-    const goToNextProblem = () => {
-      levelsScreenState.currentIndex++;
-      if (levelsScreenState.currentIndex < levelsScreenState.problemSet.length) {
-        levelsScreenState.currentProblem = levelsScreenState.problemSet[levelsScreenState.currentIndex];
-        renderScreen('levels');
-      } else {
-        renderScreen('levels');
-      }
-    };
-
     if (correct && preferences.autoAdvanceOnCorrect) {
       setTimeout(goToNextProblem, 900);
     } else {
-      document.getElementById('submit-answer').textContent = 'Next Problem →';
-      document.getElementById('submit-answer').onclick = goToNextProblem;
+      awaitingNext = true;
+      feedbackArea.insertAdjacentHTML('beforeend', '<div class="keypad-help"><strong>Tap ✓</strong> for next problem.</div>');
     }
 
     document.getElementById('answer-input').disabled = true;
   };
 
-  document.getElementById('submit-answer').addEventListener('click', submitAnswer);
   document.getElementById('answer-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') submitAnswer();
   });
@@ -1062,8 +1066,8 @@ function renderPracticeProblem(root) {
   });
   setupOverflowMenu('levels-menu-btn', 'levels-menu');
 
-  bindPracticeOptions();
-  bindTouchKeypad('answer-input', 'levels-keypad');
+  bindPracticeOptionMenu();
+  bindTouchKeypad('answer-input', 'levels-keypad', submitAnswer);
   focusAnswerInput();
 }
 
