@@ -6,10 +6,23 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.15.0',
+        date: '2026-02-15',
+        title: 'Denser Focus Mode + Keypad-First Submit Flow',
+        current: true,
+        changes: [
+            'Improved: Practice-focus spacing tightened so more solve UI remains above the fold on mobile',
+            'Updated: Facts, levels, and word-problem flows now use keypad-first submit with integrated ✓ action',
+            'Improved: Keypad buttons enlarged and styled for better thumb accuracy',
+            'Improved: Auto-next and auto-focus are now quick toggles inside the focus overflow menu',
+            'Updated: Expansion semantic version to v2.23.0 with release notes',
+        ],
+    },
+    {
         version: '1.14.0',
         date: '2026-02-15',
         title: 'Mobile Input & Scroll UX Improvements',
-        current: true,
+        current: false,
         changes: [
             'Improved: Word problem layout puts answer input earlier to reduce scrolling before answering',
             'Added: Touch keypad for word problems, facts practice, and progressive levels practice',
