@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.11.0',
+        date: '2026-02-15',
+        title: 'Interactive Ten-Frame Visual Demo',
+        current: true,
+        changes: [
+            'Added: Interactive ten-frame partition challenge in Visual Components Demo',
+            'Added: Section A/B selection so learners can build each addend on the ten frame',
+            'Added: Check/reset/new-problem controls with targeted feedback',
+            'Updated: Expansion semantic version to v2.19.0 with release notes',
+        ],
+    },
+    {
         version: '1.10.0',
         date: '2026-02-15',
         title: 'Expansion Practice Flow Options',
-        current: true,
+        current: false,
         changes: [
             'Added: Expansion setting to auto-advance to the next question after a correct answer',
             'Added: Expansion setting to auto-focus the answer input for each new question',

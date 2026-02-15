@@ -1527,8 +1527,23 @@ function renderVisualDemoScreen(root) {
 
       <div class="visual-demo-card">
         <h2>Ten Frame Visual</h2>
-        <p>Shows number bonds and making 10 strategy with animated dots.</p>
+        <p>Shows number bonds and making 10 strategy with animated dots, plus an interactive partition challenge.</p>
         <div id="ten-frame-demo" class="visual-container"></div>
+        <div class="interactive-ten-frame-panel" id="ten-frame-panel">
+          <div class="interactive-problem" id="ten-frame-problem">Build the model for: 7 + 5</div>
+          <div class="interactive-instructions">Choose a section, then tap squares to build each part.</div>
+          <div class="interactive-section-buttons">
+            <button class="btn btn-small btn-primary" id="select-section-a">Select Section A</button>
+            <button class="btn btn-small btn-secondary" id="select-section-b">Select Section B</button>
+          </div>
+          <div class="interactive-status" id="ten-frame-status"></div>
+          <div class="interactive-feedback" id="ten-frame-feedback"></div>
+          <div class="interactive-actions">
+            <button class="btn btn-primary" id="check-ten-frame">Check Sections</button>
+            <button class="btn btn-secondary" id="reset-ten-frame">Reset</button>
+            <button class="btn btn-secondary" id="new-ten-frame">New Problem</button>
+          </div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-make-10">Demo: Make 10 (7+5)</button>
           <button class="btn btn-primary" id="demo-add-dots">Demo: Add 8 Dots</button>
@@ -1593,20 +1608,107 @@ function renderVisualDemoScreen(root) {
   let tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
   tenFrame.render(0);
 
+  const tenFrameProblemEl = document.getElementById('ten-frame-problem');
+  const tenFrameStatusEl = document.getElementById('ten-frame-status');
+  const tenFrameFeedbackEl = document.getElementById('ten-frame-feedback');
+  const sectionABtn = document.getElementById('select-section-a');
+  const sectionBBtn = document.getElementById('select-section-b');
+
+  const interactiveProblems = [
+    { a: 7, b: 5 },
+    { a: 6, b: 4 },
+    { a: 8, b: 3 },
+    { a: 9, b: 6 },
+    { a: 4, b: 7 }
+  ];
+  let interactiveProblem = interactiveProblems[0];
+
+  const updateSectionButtons = (activeSection) => {
+    sectionABtn.className = `btn btn-small ${activeSection === 'a' ? 'btn-primary' : 'btn-secondary'}`;
+    sectionBBtn.className = `btn btn-small ${activeSection === 'b' ? 'btn-primary' : 'btn-secondary'}`;
+  };
+
+  const updateInteractiveStatus = (summary) => {
+    if (!summary) return;
+
+    tenFrameStatusEl.textContent = `Section A: ${summary.countA}/${summary.a} • Section B: ${summary.countB}/${summary.b} • Total selected: ${summary.countTotal}/${summary.total}`;
+    updateSectionButtons(summary.activeSection);
+  };
+
+  const startInteractiveProblem = (problem) => {
+    interactiveProblem = problem;
+    tenFrameProblemEl.textContent = `Build the model for: ${problem.a} + ${problem.b}`;
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
+
+    tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
+    tenFrame.renderInteractivePartition(problem.a, problem.b, {
+      activeSection: 'a',
+      onChange: updateInteractiveStatus
+    });
+  };
+
+  startInteractiveProblem(interactiveProblem);
+
+  sectionABtn.addEventListener('click', () => {
+    tenFrame.setInteractiveSection('a');
+    updateSectionButtons('a');
+  });
+
+  sectionBBtn.addEventListener('click', () => {
+    tenFrame.setInteractiveSection('b');
+    updateSectionButtons('b');
+  });
+
+  document.getElementById('check-ten-frame').addEventListener('click', () => {
+    const summary = tenFrame.getInteractiveSummary();
+    if (!summary) return;
+
+    if (!summary.isComplete) {
+      tenFrameFeedbackEl.textContent = `Keep going — you still need to select ${summary.total - summary.countTotal} more square(s).`;
+      tenFrameFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    if (summary.isCorrect) {
+      tenFrameFeedbackEl.textContent = `Great partition! ${summary.a} + ${summary.b} is modelled correctly.`;
+      tenFrameFeedbackEl.className = 'interactive-feedback success';
+    } else {
+      tenFrameFeedbackEl.textContent = `Close! You selected A=${summary.countA} and B=${summary.countB}. Target is A=${summary.a}, B=${summary.b}.`;
+      tenFrameFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('reset-ten-frame').addEventListener('click', () => {
+    tenFrame.clearInteractiveSelections();
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
+  });
+
+  document.getElementById('new-ten-frame').addEventListener('click', () => {
+    const randomProblem = interactiveProblems[Math.floor(Math.random() * interactiveProblems.length)];
+    startInteractiveProblem(randomProblem);
+  });
+
   document.getElementById('demo-make-10').addEventListener('click', () => {
     tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
     tenFrame.animateMake10(7, 5);
+    tenFrameStatusEl.textContent = 'Demo mode running: watch how 7 + 5 is regrouped into 10 + 2.';
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
   });
 
   document.getElementById('demo-add-dots').addEventListener('click', () => {
     tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#4CAF50', '#42A5F5'] });
     tenFrame.render(0);
     setTimeout(() => tenFrame.animateAdd(8, '#4CAF50'), 300);
+    tenFrameStatusEl.textContent = 'Demo mode running: adding 8 dots one at a time.';
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
   });
 
   document.getElementById('demo-clear-frame').addEventListener('click', () => {
-    tenFrame = new TenFrameVisual(tenFrameCon);
-    tenFrame.render(0);
+    startInteractiveProblem(interactiveProblem);
   });
 
   // Base-10 Blocks demos

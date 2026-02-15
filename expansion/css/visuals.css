@@ -97,6 +97,75 @@
   fill: #e0e0e0;
 }
 
+.ten-frame-interactive-cell {
+  fill: rgba(255, 255, 255, 0.01);
+  stroke: transparent;
+  cursor: pointer;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.ten-frame-interactive-cell:hover {
+  fill: rgba(66, 165, 245, 0.1);
+  stroke: rgba(66, 165, 245, 0.45);
+}
+
+.ten-frame-interactive-cell.selected-a {
+  fill: rgba(229, 115, 115, 0.35);
+  stroke: #e57373;
+}
+
+.ten-frame-interactive-cell.selected-b {
+  fill: rgba(66, 165, 245, 0.35);
+  stroke: #42a5f5;
+}
+
+.interactive-ten-frame-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+}
+
+.interactive-problem {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: #263238;
+}
+
+.interactive-instructions,
+.interactive-status {
+  font-size: 0.92rem;
+  color: #546e7a;
+  margin-bottom: 0.6rem;
+}
+
+.interactive-section-buttons,
+.interactive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.interactive-feedback {
+  min-height: 1.2rem;
+  font-weight: 600;
+  margin: 0.4rem 0;
+}
+
+.interactive-feedback.success {
+  color: #2e7d32;
+}
+
+.interactive-feedback.warning {
+  color: #ef6c00;
+}
+
+.interactive-feedback.error {
+  color: #c62828;
+}
+
 /* Base-10 Blocks SVG */
 .base10-svg {
   width: 100%;
