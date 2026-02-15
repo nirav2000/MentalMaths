@@ -582,6 +582,127 @@ body {
   }
 }
 
+/* ========================================
+   Practice Focus Mode
+   ======================================== */
+body.practice-focus .expansion-header {
+  display: none;
+}
+
+body.practice-focus .breadcrumb-container {
+  display: none;
+}
+
+body.practice-focus #expansion-root {
+  padding-top: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+body.practice-focus .card {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+}
+
+body.practice-focus .practice-header {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #fff;
+  margin: 0 -0.5rem 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.practice-focus .practice-info {
+  flex: 1;
+  min-width: 0;
+}
+
+body.practice-focus .progress-indicator,
+body.practice-focus .progress-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.focus-back-btn,
+.focus-icon-btn {
+  border: none;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 999px;
+  min-height: 40px;
+  min-width: 40px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.focus-back-btn {
+  padding: 0 0.9rem;
+}
+
+.focus-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.focus-menu-wrap {
+  position: relative;
+}
+
+.focus-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  min-width: 150px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  padding: 0.35rem;
+}
+
+.focus-menu.is-open {
+  display: block;
+}
+
+.focus-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.focus-menu-item:hover {
+  background: #f5f7fb;
+}
+
+@media (max-width: 768px) {
+  body.practice-focus #expansion-root {
+    padding-top: 0.35rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  body.practice-focus .session-stats-mini {
+    margin-top: 0.5rem;
+  }
+
+  body.practice-focus .bottom-nav {
+    display: none;
+  }
+}
+
 /* Misunderstanding Centre */
 .misunderstanding-centre {
   margin: 2rem 0;

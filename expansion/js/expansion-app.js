@@ -170,6 +170,53 @@ function bindTouchKeypad(inputId, keypadId, onEnter = null) {
   });
 }
 
+function isPracticeFocusScreen(screenName) {
+  if (screenName === 'addition-facts') {
+    return !!getCurrentAdditionSession();
+  }
+
+  if (screenName === 'subtraction-facts') {
+    return !!getCurrentSubtractionSession();
+  }
+
+  if (screenName === 'levels') {
+    return !!(levelsScreenState.currentProblem && levelsScreenState.currentIndex < levelsScreenState.problemSet.length);
+  }
+
+  if (screenName === 'word-problems') {
+    return !!(wordProblemsScreenState.currentProblem && wordProblemsScreenState.currentIndex < wordProblemsScreenState.problemSet.length);
+  }
+
+  return false;
+}
+
+function setPracticeFocusMode(enabled) {
+  document.body.classList.toggle('practice-focus', enabled);
+}
+
+function setupOverflowMenu(menuButtonId, menuPanelId) {
+  const menuButton = document.getElementById(menuButtonId);
+  const menuPanel = document.getElementById(menuPanelId);
+
+  if (!menuButton || !menuPanel) return;
+
+  if (menuButton.dataset.focusMenuBound === 'true') return;
+  menuButton.dataset.focusMenuBound = 'true';
+
+  const closeMenu = () => menuPanel.classList.remove('is-open');
+
+  menuButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    menuPanel.classList.toggle('is-open');
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!menuPanel.contains(event.target) && event.target !== menuButton) {
+      closeMenu();
+    }
+  }, { passive: true });
+}
+
 /**
  * Initializes the expansion app.
  */
@@ -273,6 +320,8 @@ export function renderScreen(screenName, params = {}) {
       default:
         renderNotFoundScreen(root);
     }
+
+    setPracticeFocusMode(isPracticeFocusScreen(screenName));
     console.log(`Screen ${screenName} rendered successfully`);
   } catch (error) {
     console.error(`Error rendering screen ${screenName}:`, error);
@@ -598,8 +647,17 @@ function renderPracticeScreen(root, operation = 'addition') {
   container.className = 'practice-container';
   container.innerHTML = `
     <div class="practice-header">
+      <button class="focus-back-btn" id="focus-back-btn" aria-label="Back to strategy list">← Back</button>
       <span class="progress-indicator">Question ${session.currentIndex + 1} of ${session.totalProblems}</span>
-      <button class="btn btn-secondary btn-small" id="quit-btn">Quit</button>
+      <div class="focus-actions">
+        <button class="focus-icon-btn" id="hint-btn" aria-label="Show hint" title="Show hint">💡</button>
+        <div class="focus-menu-wrap">
+          <button class="focus-icon-btn" id="practice-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
+          <div class="focus-menu" id="practice-menu">
+            <button class="focus-menu-item" id="quit-btn">Quit Session</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="problem-display">
@@ -622,7 +680,6 @@ function renderPracticeScreen(root, operation = 'addition') {
 
     <div class="practice-buttons">
       <button class="btn btn-submit" id="submit-btn">Submit Answer</button>
-      <button class="btn btn-hint" id="hint-btn">Show Hint</button>
     </div>
 
     <div id="feedback-area"></div>
@@ -631,12 +688,24 @@ function renderPracticeScreen(root, operation = 'addition') {
   root.appendChild(container);
 
   // Event listeners
+  document.getElementById('focus-back-btn').addEventListener('click', () => {
+    if (isAddition) {
+      endAdditionPractice();
+    } else {
+      endSubtractionPractice();
+    }
+
+    currentProblem = null;
+    showingHint = false;
+    renderScreen(screenName);
+  });
   document.getElementById('submit-btn').addEventListener('click', () => handleSubmit(operation));
   document.getElementById('hint-btn').addEventListener('click', showHint);
   document.getElementById('quit-btn').addEventListener('click', () => {
     const summary = isAddition ? endAdditionPractice() : endSubtractionPractice();
     renderScreen(screenName, { showSummary: true, summary });
   });
+  setupOverflowMenu('practice-menu-btn', 'practice-menu');
 
   const input = document.getElementById('answer-input');
   input.addEventListener('keypress', (e) => {
@@ -890,11 +959,16 @@ function renderPracticeProblem(root) {
 
   root.innerHTML = `
     <div class="practice-header">
-      <div class="practice-info">
-        <span class="level-badge">Level ${level}</span>
-        <span class="progress-badge">Problem ${progress} / ${total}</span>
+      <button class="focus-back-btn" id="back-to-level-select" aria-label="Back to level selection">← Back</button>
+      <div class="practice-info focus-practice-info">
+        <span class="progress-badge">Level ${level} • Problem ${progress} / ${total}</span>
       </div>
-      <button class="btn btn-secondary btn-small" id="end-practice">End Practice</button>
+      <div class="focus-menu-wrap">
+        <button class="focus-icon-btn" id="levels-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
+        <div class="focus-menu" id="levels-menu">
+          <button class="focus-menu-item" id="end-practice">End Practice</button>
+        </div>
+      </div>
     </div>
     <div class="card practice-card">
       <div class="problem-display">
@@ -982,6 +1056,11 @@ function renderPracticeProblem(root) {
       renderScreen('levels');
     }
   });
+  document.getElementById('back-to-level-select').addEventListener('click', () => {
+    levelsScreenState = { level: null, operation: null, difficulty: 'medium', currentProblem: null, problemSet: [], currentIndex: 0, sessionResults: [], startTime: null, selectedMethod: null };
+    renderScreen('levels');
+  });
+  setupOverflowMenu('levels-menu-btn', 'levels-menu');
 
   bindPracticeOptions();
   bindTouchKeypad('answer-input', 'levels-keypad');
@@ -1134,11 +1213,16 @@ function renderWordProblemPractice(root) {
   const header = document.createElement('div');
   header.className = 'practice-header';
   header.innerHTML = `
-    <div class="practice-info">
-      <span class="level-badge">${categoryInfo.name}</span>
-      <span class="progress-badge">Problem ${currentIndex + 1} / ${problemSet.length}</span>
+    <button class="focus-back-btn" id="back-word-categories" aria-label="Back to categories">← Back</button>
+    <div class="practice-info focus-practice-info">
+      <span class="progress-badge">${categoryInfo.name} • ${currentIndex + 1} / ${problemSet.length}</span>
     </div>
-    <button class="btn btn-secondary btn-small" id="end-word-practice">End Session</button>
+    <div class="focus-menu-wrap">
+      <button class="focus-icon-btn" id="word-menu-btn" aria-label="Session options" title="Session options">⋯</button>
+      <div class="focus-menu" id="word-menu">
+        <button class="focus-menu-item" id="end-word-practice">End Session</button>
+      </div>
+    </div>
   `;
   root.appendChild(header);
 
@@ -1178,6 +1262,11 @@ function renderWordProblemPractice(root) {
       renderScreen('word-problems');
     }
   });
+  document.getElementById('back-word-categories').addEventListener('click', () => {
+    wordProblemsScreenState = { category: null, level: 3, difficulty: 'medium', currentProblem: null, problemSet: [], currentIndex: 0, sessionResults: [], scaffoldingLevel: 0 };
+    renderScreen('word-problems');
+  });
+  setupOverflowMenu('word-menu-btn', 'word-menu');
 }
 
 function renderWordProblemSessionResults(root) {
