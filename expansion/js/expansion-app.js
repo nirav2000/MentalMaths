@@ -140,7 +140,7 @@ function focusAnswerInput() {
 }
 
 function renderTouchKeypad(keypadId) {
-  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'];
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'];
   return `
     <div class="touch-keypad" id="${keypadId}">
       ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}

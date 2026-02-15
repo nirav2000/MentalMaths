@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.18.0',
+        date: '2026-02-15',
+        title: 'Keypad Order + No-Cutoff Mobile Layout',
+        current: true,
+        changes: [
+            'Updated: Expansion keypad ordering now matches phone/index layout (1-2-3 top row)',
+            'Improved: Quiz layout avoids keypad cutoff on short/mobile screens using compact spacing and dynamic viewport height',
+            'Improved: Numpad safe-area handling simplified to prevent bottom clipping',
+            'Updated: Expansion semantic version to v2.26.0 with release notes',
+        ],
+    },
+    {
         version: '1.17.0',
         date: '2026-02-15',
         title: 'Focus Mode Ultra-Compact Layout Pass',
-        current: true,
+        current: false,
         changes: [
             'Improved: Focus mode spacing compressed further across problem area, keypad, feedback, and headers',
             'Improved: Adaptive equation sizing with tighter vertical rhythm for short/mobile screens',
