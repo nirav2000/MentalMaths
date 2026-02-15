@@ -155,13 +155,17 @@ function bindTouchKeypad(inputId, keypadId, onEnter = null) {
 
   keypad.addEventListener('click', (e) => {
     const key = e.target?.dataset?.key;
-    if (!key || input.disabled) return;
+    if (!key) return;
+
+    if (key === '✓') {
+      if (onEnter) onEnter();
+      return;
+    }
+
+    if (input.disabled) return;
 
     if (key === '⌫') {
       input.value = input.value.slice(0, -1);
-    } else if (key === '✓') {
-      if (onEnter) onEnter();
-      return;
     } else {
       input.value += key;
     }
@@ -725,6 +729,8 @@ function goToNextFactProblem(screenName) {
 
 function handleSubmit(operation = 'addition') {
   const input = document.getElementById('answer-input');
+  if (input.disabled) return;
+
   const answer = input.value;
 
   if (!answer) return;
