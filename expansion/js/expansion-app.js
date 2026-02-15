@@ -1520,6 +1520,7 @@ function renderVisualDemoScreen(root) {
         <div id="number-line-demo" class="visual-container"></div>
         <div class="interactive-panel">
           <div class="interactive-problem" id="number-line-problem">Jump from 7 by +3. Where do you land?</div>
+          <div class="interactive-instructions">Tap a number on the line to show where your jump lands, or type it in the box.</div>
           <div class="interactive-actions">
             <input type="number" id="number-line-answer" class="demo-input" placeholder="Enter landing number" />
             <button class="btn btn-primary" id="check-number-line">Check</button>
@@ -1563,6 +1564,12 @@ function renderVisualDemoScreen(root) {
       <div class="visual-demo-card">
         <h2>Base-10 Blocks Visual</h2>
         <p>Shows place value with colored blocks (ones, tens, hundreds, thousands).</p>
+        <div class="visual-style-tabs" id="base10-style-tabs">
+          <button class="visual-tab active" data-style="classic">Classic</button>
+          <button class="visual-tab" data-style="pastel">Pastel</button>
+          <button class="visual-tab" data-style="high-contrast">High Contrast</button>
+          <button class="visual-tab" data-style="outline">Outline</button>
+        </div>
         <div id="base10-demo" class="visual-container"></div>
         <div class="interactive-panel">
           <div class="interactive-problem" id="base10-problem">How many hundreds, tens, and ones are in 347?</div>
@@ -1587,6 +1594,10 @@ function renderVisualDemoScreen(root) {
         <p>Shows number bonds and fact families with cherry diagram.</p>
         <div id="part-whole-demo" class="visual-container"></div>
         <div class="interactive-panel">
+          <div class="visual-style-tabs" id="part-whole-mode-tabs">
+            <button class="visual-tab active" data-mode="missing-part2">Missing Part</button>
+            <button class="visual-tab" data-mode="missing-whole">Missing Whole</button>
+          </div>
           <div class="interactive-problem" id="part-whole-problem">Find the missing part: 12 = 7 + ?</div>
           <div class="interactive-actions">
             <input type="number" id="part-whole-answer" class="demo-input" placeholder="Missing part" />
@@ -1634,9 +1645,14 @@ function renderVisualDemoScreen(root) {
       start: q.start
     });
     numberLine.render();
-    numberLine.animateJumps([
-      { from: q.start, to: q.start + q.jump, label: `${q.jump >= 0 ? '+' : ''}${q.jump}`, colour: '#42A5F5' }
-    ], 900);
+
+    numberLine.enableSelection((selectedValue) => {
+      numberLine.clear();
+      numberLine.highlight(q.start, '#42A5F5');
+      numberLine.addJump(q.start, selectedValue, `${selectedValue - q.start >= 0 ? '+' : ''}${selectedValue - q.start}`, '#42A5F5');
+      numberLine.highlight(selectedValue, '#FF9800');
+      numberLineAnswerEl.value = selectedValue;
+    });
   };
 
   setNumberLineQuestion(numberLineQuestion);
@@ -1797,7 +1813,28 @@ function renderVisualDemoScreen(root) {
 
   // Base-10 Blocks demos
   const base10Con = document.getElementById('base10-demo');
-  let base10 = new Base10Visual(base10Con);
+  const base10Styles = {
+    classic: {
+      unitSize: 20,
+      colours: { ones: '#42A5F5', tens: '#FF9800', hundreds: '#66BB6A', thousands: '#9C27B0' }
+    },
+    pastel: {
+      unitSize: 20,
+      colours: { ones: '#90caf9', tens: '#ffcc80', hundreds: '#a5d6a7', thousands: '#ce93d8' }
+    },
+    'high-contrast': {
+      unitSize: 22,
+      colours: { ones: '#1565C0', tens: '#EF6C00', hundreds: '#2E7D32', thousands: '#6A1B9A' }
+    },
+    outline: {
+      unitSize: 18,
+      blockStyle: 'outline',
+      strokeColor: '#455A64',
+      colours: { ones: '#1E88E5', tens: '#FB8C00', hundreds: '#43A047', thousands: '#8E24AA' }
+    }
+  };
+  let selectedBase10Style = 'classic';
+  let base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
   base10.renderNumber(0);
 
   const base10ProblemEl = document.getElementById('base10-problem');
@@ -1816,26 +1853,35 @@ function renderVisualDemoScreen(root) {
     inputHundreds.value = '';
     inputTens.value = '';
     inputOnes.value = '';
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(value);
   };
 
   setBase10Question(base10Question);
 
   document.getElementById('demo-show-number').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(347);
   });
 
   document.getElementById('demo-break-ten').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(15);
     setTimeout(() => base10.animateBreak('tens'), 500);
   });
 
   document.getElementById('demo-clear-blocks').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(0);
+  });
+
+  document.querySelectorAll('#base10-style-tabs .visual-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      selectedBase10Style = tab.dataset.style;
+      document.querySelectorAll('#base10-style-tabs .visual-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      setBase10Question(base10Question);
+    });
   });
 
   document.getElementById('check-base10').addEventListener('click', () => {
@@ -1879,16 +1925,25 @@ function renderVisualDemoScreen(root) {
     { whole: 14, part: 6 },
     { whole: 16, part: 8 }
   ];
+  let partWholeMode = 'missing-part2';
   let partWholeQuestion = partWholeQuestions[0];
 
   const setPartWholeQuestion = (q) => {
     partWholeQuestion = q;
-    partWholeProblemEl.textContent = `Find the missing part: ${q.whole} = ${q.part} + ?`;
+    if (partWholeMode === 'missing-whole') {
+      partWholeProblemEl.textContent = `Find the whole: ? = ${q.part} + ${q.whole - q.part}`;
+    } else {
+      partWholeProblemEl.textContent = `Find the missing part: ${q.whole} = ${q.part} + ?`;
+    }
     partWholeFeedbackEl.textContent = '';
     partWholeFeedbackEl.className = 'interactive-feedback';
     partWholeAnswerEl.value = '';
     partWhole = new PartWholeVisual(partWholeCon);
-    partWhole.renderBlank({ whole: q.whole, part1: q.part, part2: null }, 'part2');
+    if (partWholeMode === 'missing-whole') {
+      partWhole.renderBlank({ whole: null, part1: q.part, part2: q.whole - q.part }, 'whole');
+    } else {
+      partWhole.renderBlank({ whole: q.whole, part1: q.part, part2: null }, 'part2');
+    }
   };
 
   setPartWholeQuestion(partWholeQuestion);
@@ -1916,20 +1971,39 @@ function renderVisualDemoScreen(root) {
       return;
     }
 
-    const correct = partWholeQuestion.whole - partWholeQuestion.part;
+    const correct = partWholeMode === 'missing-whole'
+      ? partWholeQuestion.whole
+      : partWholeQuestion.whole - partWholeQuestion.part;
     if (value === correct) {
-      partWholeFeedbackEl.textContent = 'Correct! You found the missing part.';
+      partWholeFeedbackEl.textContent = partWholeMode === 'missing-whole'
+        ? 'Correct! You found the whole.'
+        : 'Correct! You found the missing part.';
       partWholeFeedbackEl.className = 'interactive-feedback success';
       partWhole = new PartWholeVisual(partWholeCon);
-      partWhole.render(partWholeQuestion.whole, partWholeQuestion.part, correct);
+      partWhole.render(
+        partWholeQuestion.whole,
+        partWholeQuestion.part,
+        partWholeQuestion.whole - partWholeQuestion.part
+      );
     } else {
-      partWholeFeedbackEl.textContent = `Not quite. The missing part is ${correct}.`;
+      partWholeFeedbackEl.textContent = partWholeMode === 'missing-whole'
+        ? `Not quite. The whole is ${correct}.`
+        : `Not quite. The missing part is ${correct}.`;
       partWholeFeedbackEl.className = 'interactive-feedback error';
     }
   });
 
   document.getElementById('new-part-whole').addEventListener('click', () => {
     setPartWholeQuestion(partWholeQuestions[Math.floor(Math.random() * partWholeQuestions.length)]);
+  });
+
+  document.querySelectorAll('#part-whole-mode-tabs .visual-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      partWholeMode = tab.dataset.mode;
+      document.querySelectorAll('#part-whole-mode-tabs .visual-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      setPartWholeQuestion(partWholeQuestion);
+    });
   });
 }
 

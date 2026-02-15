@@ -42,6 +42,15 @@
   animation: pulse 0.5s ease-out;
 }
 
+.number-line-hit-area {
+  fill: rgba(66, 165, 245, 0.01);
+  cursor: pointer;
+}
+
+.number-line-hit-area:hover {
+  fill: rgba(66, 165, 245, 0.15);
+}
+
 @keyframes drawArc {
   from {
     stroke-dasharray: 1000;
@@ -272,6 +281,29 @@
   box-shadow: var(--shadow);
 }
 
+.visual-style-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.visual-tab {
+  border: 1px solid #cfd8dc;
+  background: #ffffff;
+  color: #455a64;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.visual-tab.active {
+  background: #42a5f5;
+  border-color: #42a5f5;
+  color: #fff;
+}
+
 .visual-demo-card h2 {
   color: var(--color-text);
   margin-top: 0;
@@ -320,5 +352,15 @@
 
   .demo-controls .btn {
     width: 100%;
+  }
+
+  .demo-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .interactive-actions.multi-input label {
+    width: 100%;
+    justify-content: space-between;
   }
 }

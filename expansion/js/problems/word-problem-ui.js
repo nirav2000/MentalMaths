@@ -136,13 +136,13 @@ function showScaffolding(container, problem, level) {
     highlightSection.className = 'scaffolding-level-1';
     highlightSection.innerHTML = `
       <h3>Key Information Highlighted</h3>
-      <div class="highlighted-problem">
-        ${problem.scaffolding.highlightedText}
-      </div>
       <div class="highlight-legend">
         <span class="legend-item"><span class="highlight-number">Blue</span> = Numbers</span>
         <span class="legend-item"><span class="highlight-keyword">Green</span> = Action words</span>
         <span class="legend-item"><span class="highlight-question">Yellow</span> = Question</span>
+      </div>
+      <div class="highlighted-problem">
+        ${problem.scaffolding.highlightedText}
       </div>
     `;
     container.appendChild(highlightSection);

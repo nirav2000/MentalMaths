@@ -6,10 +6,24 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.13.0',
+        date: '2026-02-15',
+        title: 'Visual Demo Interaction Upgrade + Mobile Layout Fixes',
+        current: true,
+        changes: [
+            'Added: Selectable number-line interaction so learners can tap landing points and show jump strategy',
+            'Added: Base-10 design style tabs (Classic, Pastel, High Contrast, Outline)',
+            'Improved: Part-whole interactive panel with missing-part and missing-whole modes',
+            'Updated: Word problem highlight key moved above highlighted text for better hint usability',
+            'Improved: Responsive layout to reduce horizontal overflow on iPad/iPhone',
+            'Updated: Expansion semantic version to v2.21.0 with release notes',
+        ],
+    },
+    {
         version: '1.12.0',
         date: '2026-02-15',
         title: 'Interactive Visual Demo Knowledge Checks',
-        current: true,
+        current: false,
         changes: [
             'Updated: Ten-frame terminology from Section A/B to Part A/B with red/blue colour mapping',
             'Added: Number line interactive question and answer check panel',
