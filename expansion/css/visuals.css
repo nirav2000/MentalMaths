@@ -127,10 +127,26 @@
   border: 1px solid #e0e0e0;
 }
 
+.interactive-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+}
+
 .interactive-problem {
   font-weight: 700;
   margin-bottom: 0.4rem;
   color: #263238;
+}
+
+.interactive-problem .part-a {
+  color: #e57373;
+}
+
+.interactive-problem .part-b {
+  color: #42a5f5;
 }
 
 .interactive-instructions,
@@ -146,6 +162,49 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.6rem 0;
+}
+
+.part-a-btn,
+.part-b-btn {
+  color: #fff;
+  border: none;
+}
+
+.part-a-btn {
+  background: #ef9a9a;
+}
+
+.part-a-btn.active {
+  background: #e53935;
+}
+
+.part-b-btn {
+  background: #90caf9;
+}
+
+.part-b-btn.active {
+  background: #1e88e5;
+}
+
+.demo-input {
+  min-width: 170px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #b0bec5;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.demo-input.small {
+  min-width: 70px;
+  width: 70px;
+}
+
+.interactive-actions.multi-input label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #455a64;
 }
 
 .interactive-feedback {

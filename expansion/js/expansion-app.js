@@ -1518,6 +1518,15 @@ function renderVisualDemoScreen(root) {
         <h2>Number Line Visual</h2>
         <p>Shows counting on, sequencing, and compensation with animated jumps.</p>
         <div id="number-line-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="interactive-problem" id="number-line-problem">Jump from 7 by +3. Where do you land?</div>
+          <div class="interactive-actions">
+            <input type="number" id="number-line-answer" class="demo-input" placeholder="Enter landing number" />
+            <button class="btn btn-primary" id="check-number-line">Check</button>
+            <button class="btn btn-secondary" id="new-number-line">New Question</button>
+          </div>
+          <div class="interactive-feedback" id="number-line-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-counting-on">Demo: Counting On (7+3)</button>
           <button class="btn btn-primary" id="demo-sequencing">Demo: Sequencing (347+256)</button>
@@ -1530,16 +1539,16 @@ function renderVisualDemoScreen(root) {
         <p>Shows number bonds and making 10 strategy with animated dots, plus an interactive partition challenge.</p>
         <div id="ten-frame-demo" class="visual-container"></div>
         <div class="interactive-ten-frame-panel" id="ten-frame-panel">
-          <div class="interactive-problem" id="ten-frame-problem">Build the model for: 7 + 5</div>
-          <div class="interactive-instructions">Choose a section, then tap squares to build each part.</div>
+          <div class="interactive-problem" id="ten-frame-problem">Build the model for: <span class="part-a">7</span> + <span class="part-b">5</span></div>
+          <div class="interactive-instructions">Choose a part, then tap squares to build each part.</div>
           <div class="interactive-section-buttons">
-            <button class="btn btn-small btn-primary" id="select-section-a">Select Section A</button>
-            <button class="btn btn-small btn-secondary" id="select-section-b">Select Section B</button>
+            <button class="btn btn-small part-a-btn" id="select-part-a">Select Part A</button>
+            <button class="btn btn-small part-b-btn" id="select-part-b">Select Part B</button>
           </div>
           <div class="interactive-status" id="ten-frame-status"></div>
           <div class="interactive-feedback" id="ten-frame-feedback"></div>
           <div class="interactive-actions">
-            <button class="btn btn-primary" id="check-ten-frame">Check Sections</button>
+            <button class="btn btn-primary" id="check-ten-frame">Check Parts</button>
             <button class="btn btn-secondary" id="reset-ten-frame">Reset</button>
             <button class="btn btn-secondary" id="new-ten-frame">New Problem</button>
           </div>
@@ -1555,6 +1564,17 @@ function renderVisualDemoScreen(root) {
         <h2>Base-10 Blocks Visual</h2>
         <p>Shows place value with colored blocks (ones, tens, hundreds, thousands).</p>
         <div id="base10-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="interactive-problem" id="base10-problem">How many hundreds, tens, and ones are in 347?</div>
+          <div class="interactive-actions multi-input">
+            <label>H <input type="number" id="base10-hundreds" class="demo-input small" min="0" /></label>
+            <label>T <input type="number" id="base10-tens" class="demo-input small" min="0" /></label>
+            <label>O <input type="number" id="base10-ones" class="demo-input small" min="0" /></label>
+            <button class="btn btn-primary" id="check-base10">Check</button>
+            <button class="btn btn-secondary" id="new-base10">New Number</button>
+          </div>
+          <div class="interactive-feedback" id="base10-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-show-number">Demo: Show 347</button>
           <button class="btn btn-primary" id="demo-break-ten">Demo: Break Ten</button>
@@ -1566,6 +1586,15 @@ function renderVisualDemoScreen(root) {
         <h2>Part-Whole Model Visual</h2>
         <p>Shows number bonds and fact families with cherry diagram.</p>
         <div id="part-whole-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="interactive-problem" id="part-whole-problem">Find the missing part: 12 = 7 + ?</div>
+          <div class="interactive-actions">
+            <input type="number" id="part-whole-answer" class="demo-input" placeholder="Missing part" />
+            <button class="btn btn-primary" id="check-part-whole">Check</button>
+            <button class="btn btn-secondary" id="new-part-whole">New Question</button>
+          </div>
+          <div class="interactive-feedback" id="part-whole-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-show-pw">Demo: Show 12 = 7 + 5</button>
           <button class="btn btn-primary" id="demo-split">Demo: Split Animation</button>
@@ -1579,6 +1608,61 @@ function renderVisualDemoScreen(root) {
   const numberLineCon = document.getElementById('number-line-demo');
   let numberLine = new NumberLineVisual(numberLineCon, { min: 0, max: 20, start: 7 });
   numberLine.render();
+
+  const numberLineProblemEl = document.getElementById('number-line-problem');
+  const numberLineFeedbackEl = document.getElementById('number-line-feedback');
+  const numberLineAnswerEl = document.getElementById('number-line-answer');
+  const numberLineQuestions = [
+    { start: 7, jump: 3 },
+    { start: 12, jump: 5 },
+    { start: 9, jump: 4 },
+    { start: 15, jump: -6 },
+    { start: 18, jump: -7 }
+  ];
+  let numberLineQuestion = numberLineQuestions[0];
+
+  const setNumberLineQuestion = (q) => {
+    numberLineQuestion = q;
+    numberLineProblemEl.textContent = `Jump from ${q.start} by ${q.jump >= 0 ? '+' : ''}${q.jump}. Where do you land?`;
+    numberLineFeedbackEl.textContent = '';
+    numberLineFeedbackEl.className = 'interactive-feedback';
+    numberLineAnswerEl.value = '';
+
+    numberLine = new NumberLineVisual(numberLineCon, {
+      min: Math.max(0, Math.min(q.start, q.start + q.jump) - 2),
+      max: Math.max(q.start, q.start + q.jump) + 2,
+      start: q.start
+    });
+    numberLine.render();
+    numberLine.animateJumps([
+      { from: q.start, to: q.start + q.jump, label: `${q.jump >= 0 ? '+' : ''}${q.jump}`, colour: '#42A5F5' }
+    ], 900);
+  };
+
+  setNumberLineQuestion(numberLineQuestion);
+
+  document.getElementById('check-number-line').addEventListener('click', () => {
+    const value = parseInt(numberLineAnswerEl.value, 10);
+    if (Number.isNaN(value)) {
+      numberLineFeedbackEl.textContent = 'Enter a number first.';
+      numberLineFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const correct = numberLineQuestion.start + numberLineQuestion.jump;
+    if (value === correct) {
+      numberLineFeedbackEl.textContent = 'Correct! Great number line thinking.';
+      numberLineFeedbackEl.className = 'interactive-feedback success';
+    } else {
+      numberLineFeedbackEl.textContent = `Not yet. The landing number is ${correct}.`;
+      numberLineFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-number-line').addEventListener('click', () => {
+    const q = numberLineQuestions[Math.floor(Math.random() * numberLineQuestions.length)];
+    setNumberLineQuestion(q);
+  });
 
   document.getElementById('demo-counting-on').addEventListener('click', () => {
     numberLine.clear();
@@ -1611,8 +1695,8 @@ function renderVisualDemoScreen(root) {
   const tenFrameProblemEl = document.getElementById('ten-frame-problem');
   const tenFrameStatusEl = document.getElementById('ten-frame-status');
   const tenFrameFeedbackEl = document.getElementById('ten-frame-feedback');
-  const sectionABtn = document.getElementById('select-section-a');
-  const sectionBBtn = document.getElementById('select-section-b');
+  const partABtn = document.getElementById('select-part-a');
+  const partBBtn = document.getElementById('select-part-b');
 
   const interactiveProblems = [
     { a: 7, b: 5 },
@@ -1624,20 +1708,20 @@ function renderVisualDemoScreen(root) {
   let interactiveProblem = interactiveProblems[0];
 
   const updateSectionButtons = (activeSection) => {
-    sectionABtn.className = `btn btn-small ${activeSection === 'a' ? 'btn-primary' : 'btn-secondary'}`;
-    sectionBBtn.className = `btn btn-small ${activeSection === 'b' ? 'btn-primary' : 'btn-secondary'}`;
+    partABtn.className = `btn btn-small part-a-btn ${activeSection === 'a' ? 'active' : ''}`;
+    partBBtn.className = `btn btn-small part-b-btn ${activeSection === 'b' ? 'active' : ''}`;
   };
 
   const updateInteractiveStatus = (summary) => {
     if (!summary) return;
 
-    tenFrameStatusEl.textContent = `Section A: ${summary.countA}/${summary.a} • Section B: ${summary.countB}/${summary.b} • Total selected: ${summary.countTotal}/${summary.total}`;
+    tenFrameStatusEl.textContent = `Part A: ${summary.countA}/${summary.a} • Part B: ${summary.countB}/${summary.b} • Total selected: ${summary.countTotal}/${summary.total}`;
     updateSectionButtons(summary.activeSection);
   };
 
   const startInteractiveProblem = (problem) => {
     interactiveProblem = problem;
-    tenFrameProblemEl.textContent = `Build the model for: ${problem.a} + ${problem.b}`;
+    tenFrameProblemEl.innerHTML = `Build the model for: <span class="part-a">${problem.a}</span> + <span class="part-b">${problem.b}</span>`;
     tenFrameFeedbackEl.textContent = '';
     tenFrameFeedbackEl.className = 'interactive-feedback';
 
@@ -1650,12 +1734,12 @@ function renderVisualDemoScreen(root) {
 
   startInteractiveProblem(interactiveProblem);
 
-  sectionABtn.addEventListener('click', () => {
+  partABtn.addEventListener('click', () => {
     tenFrame.setInteractiveSection('a');
     updateSectionButtons('a');
   });
 
-  sectionBBtn.addEventListener('click', () => {
+  partBBtn.addEventListener('click', () => {
     tenFrame.setInteractiveSection('b');
     updateSectionButtons('b');
   });
@@ -1716,6 +1800,28 @@ function renderVisualDemoScreen(root) {
   let base10 = new Base10Visual(base10Con);
   base10.renderNumber(0);
 
+  const base10ProblemEl = document.getElementById('base10-problem');
+  const base10FeedbackEl = document.getElementById('base10-feedback');
+  const inputHundreds = document.getElementById('base10-hundreds');
+  const inputTens = document.getElementById('base10-tens');
+  const inputOnes = document.getElementById('base10-ones');
+  const base10Questions = [347, 529, 804, 116, 990];
+  let base10Question = base10Questions[0];
+
+  const setBase10Question = (value) => {
+    base10Question = value;
+    base10ProblemEl.textContent = `How many hundreds, tens, and ones are in ${value}?`;
+    base10FeedbackEl.textContent = '';
+    base10FeedbackEl.className = 'interactive-feedback';
+    inputHundreds.value = '';
+    inputTens.value = '';
+    inputOnes.value = '';
+    base10 = new Base10Visual(base10Con);
+    base10.renderNumber(value);
+  };
+
+  setBase10Question(base10Question);
+
   document.getElementById('demo-show-number').addEventListener('click', () => {
     base10 = new Base10Visual(base10Con);
     base10.renderNumber(347);
@@ -1732,10 +1838,60 @@ function renderVisualDemoScreen(root) {
     base10.renderNumber(0);
   });
 
+  document.getElementById('check-base10').addEventListener('click', () => {
+    const h = parseInt(inputHundreds.value, 10);
+    const t = parseInt(inputTens.value, 10);
+    const o = parseInt(inputOnes.value, 10);
+    if ([h, t, o].some(Number.isNaN)) {
+      base10FeedbackEl.textContent = 'Fill in all three place values.';
+      base10FeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const ch = Math.floor(base10Question / 100);
+    const ct = Math.floor((base10Question % 100) / 10);
+    const co = base10Question % 10;
+    if (h === ch && t === ct && o === co) {
+      base10FeedbackEl.textContent = 'Correct place value breakdown!';
+      base10FeedbackEl.className = 'interactive-feedback success';
+    } else {
+      base10FeedbackEl.textContent = `Try again: ${base10Question} = ${ch} hundreds, ${ct} tens, ${co} ones.`;
+      base10FeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-base10').addEventListener('click', () => {
+    setBase10Question(base10Questions[Math.floor(Math.random() * base10Questions.length)]);
+  });
+
   // Part-Whole Model demos
   const partWholeCon = document.getElementById('part-whole-demo');
   let partWhole = new PartWholeVisual(partWholeCon);
   partWhole.render(0, 0, 0);
+
+  const partWholeProblemEl = document.getElementById('part-whole-problem');
+  const partWholeFeedbackEl = document.getElementById('part-whole-feedback');
+  const partWholeAnswerEl = document.getElementById('part-whole-answer');
+  const partWholeQuestions = [
+    { whole: 12, part: 7 },
+    { whole: 15, part: 9 },
+    { whole: 18, part: 11 },
+    { whole: 14, part: 6 },
+    { whole: 16, part: 8 }
+  ];
+  let partWholeQuestion = partWholeQuestions[0];
+
+  const setPartWholeQuestion = (q) => {
+    partWholeQuestion = q;
+    partWholeProblemEl.textContent = `Find the missing part: ${q.whole} = ${q.part} + ?`;
+    partWholeFeedbackEl.textContent = '';
+    partWholeFeedbackEl.className = 'interactive-feedback';
+    partWholeAnswerEl.value = '';
+    partWhole = new PartWholeVisual(partWholeCon);
+    partWhole.renderBlank({ whole: q.whole, part1: q.part, part2: null }, 'part2');
+  };
+
+  setPartWholeQuestion(partWholeQuestion);
 
   document.getElementById('demo-show-pw').addEventListener('click', () => {
     partWhole = new PartWholeVisual(partWholeCon);
@@ -1750,6 +1906,30 @@ function renderVisualDemoScreen(root) {
   document.getElementById('demo-clear-pw').addEventListener('click', () => {
     partWhole = new PartWholeVisual(partWholeCon);
     partWhole.render(0, 0, 0);
+  });
+
+  document.getElementById('check-part-whole').addEventListener('click', () => {
+    const value = parseInt(partWholeAnswerEl.value, 10);
+    if (Number.isNaN(value)) {
+      partWholeFeedbackEl.textContent = 'Enter the missing part first.';
+      partWholeFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const correct = partWholeQuestion.whole - partWholeQuestion.part;
+    if (value === correct) {
+      partWholeFeedbackEl.textContent = 'Correct! You found the missing part.';
+      partWholeFeedbackEl.className = 'interactive-feedback success';
+      partWhole = new PartWholeVisual(partWholeCon);
+      partWhole.render(partWholeQuestion.whole, partWholeQuestion.part, correct);
+    } else {
+      partWholeFeedbackEl.textContent = `Not quite. The missing part is ${correct}.`;
+      partWholeFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-part-whole').addEventListener('click', () => {
+    setPartWholeQuestion(partWholeQuestions[Math.floor(Math.random() * partWholeQuestions.length)]);
   });
 }
 

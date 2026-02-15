@@ -6,10 +6,23 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.12.0',
+        date: '2026-02-15',
+        title: 'Interactive Visual Demo Knowledge Checks',
+        current: true,
+        changes: [
+            'Updated: Ten-frame terminology from Section A/B to Part A/B with red/blue colour mapping',
+            'Added: Number line interactive question and answer check panel',
+            'Added: Base-10 place-value interactive check with hundreds/tens/ones inputs',
+            'Added: Part-whole missing-part interactive check workflow',
+            'Updated: Expansion semantic version to v2.20.0 with release notes',
+        ],
+    },
+    {
         version: '1.11.0',
         date: '2026-02-15',
         title: 'Interactive Ten-Frame Visual Demo',
-        current: true,
+        current: false,
         changes: [
             'Added: Interactive ten-frame partition challenge in Visual Components Demo',
             'Added: Section A/B selection so learners can build each addend on the ten frame',
