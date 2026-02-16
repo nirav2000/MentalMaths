@@ -1,130 +1,68 @@
 /* firebase-sync.js - optional Firestore cloud sync layer
-   localStorage remains source of truth; Firebase mirrors authenticated user data.
+   Keeps localStorage as source of truth and mirrors writes to Firestore when available.
 */
 
 window.FirebaseSync = {
     _db: null,
-    _auth: null,
     _enabled: false,
     _authReady: false,
     _pendingWrites: [],
-    _user: null,
-    _statusListeners: [],
-
-    _firebaseConfig: {
-        apiKey: 'AIzaSyDlev9zW1J_VoqwAkgO25DBm6-tj8HMUdY',
-        authDomain: 'fractionworksheet.firebaseapp.com',
-        projectId: 'fractionworksheet',
-        storageBucket: 'fractionworksheet.firebasestorage.app',
-        messagingSenderId: '299874880737',
-        appId: '1:299874880737:web:27ad3f1315ca10ab29fba0'
-    },
 
     async init() {
         try {
-            if (!window.firebase?.initializeApp) {
+            if (!window.firebase || !window.firebase.initializeApp) {
                 console.warn('Firebase SDK not available, cloud sync disabled.');
                 return;
             }
 
+            const firebaseConfig = {
+                apiKey: 'AIzaSyDlev9zW1J_VoqwAkgO25DBm6-tj8HMUdY',
+                authDomain: 'fractionworksheet.firebaseapp.com',
+                projectId: 'fractionworksheet',
+                storageBucket: 'fractionworksheet.firebasestorage.app',
+                messagingSenderId: '299874880737',
+                appId: '1:299874880737:web:27ad3f1315ca10ab29fba0'
+            };
+
             if (!window.firebase.apps.length) {
-                window.firebase.initializeApp(this._firebaseConfig);
+                window.firebase.initializeApp(firebaseConfig);
+            }
+
+            if (window.firebase.auth) {
+                try {
+                    await window.firebase.auth().signInAnonymously();
+                    this._authReady = true;
+                } catch (authError) {
+                    console.warn('Anonymous auth unavailable. Continuing with Firestore client only:', authError);
+                }
             }
 
             this._db = window.firebase.firestore();
-            this._auth = window.firebase.auth ? window.firebase.auth() : null;
             this._enabled = true;
-
-            if (this._auth) {
-                this._auth.onAuthStateChanged(async (user) => {
-                    this._user = user || null;
-                    this._authReady = true;
-                    if (this.canWrite()) {
-                        await this.flushPendingWrites();
-                    }
-                    this._notifyStatus();
-                });
-            } else {
-                this._authReady = true;
-                this._notifyStatus();
-            }
-
-            console.log('Firebase initialized.', this.status());
+            await this.flushPendingWrites();
+            console.log('Firebase cloud sync enabled.', this.status());
         } catch (error) {
             console.warn('Firebase init failed, cloud sync disabled:', error);
             this._enabled = false;
             this._authReady = false;
-            this._notifyStatus();
         }
     },
 
-    onStatusChange(listener) {
-        if (typeof listener !== 'function') return () => {};
-        this._statusListeners.push(listener);
-        listener(this.status());
-        return () => {
-            this._statusListeners = this._statusListeners.filter((l) => l !== listener);
-        };
-    },
-
-    _notifyStatus() {
-        const snapshot = this.status();
-        this._statusListeners.forEach((listener) => {
-            try {
-                listener(snapshot);
-            } catch (error) {
-                console.warn('FirebaseSync status listener error:', error);
-            }
-        });
-    },
-
     isReady() {
-        return this._enabled && !!this._db && this._authReady;
-    },
-
-    canWrite() {
-        return this.isReady() && !!this._user;
-    },
-
-    currentUser() {
-        return this._user;
+        return this._enabled && !!this._db;
     },
 
     status() {
         return {
             enabled: this._enabled,
             authReady: this._authReady,
-            signedIn: !!this._user,
-            userEmail: this._user?.email || null,
-            userId: this._user?.uid || null,
             dbReady: !!this._db,
             queuedWrites: this._pendingWrites.length
         };
     },
 
-    async signUp(email, password) {
-        if (!this._auth) throw new Error('Firebase Auth is unavailable.');
-        const credential = await this._auth.createUserWithEmailAndPassword(email, password);
-        this._notifyStatus();
-        return credential.user;
-    },
-
-    async signIn(email, password) {
-        if (!this._auth) throw new Error('Firebase Auth is unavailable.');
-        const credential = await this._auth.signInWithEmailAndPassword(email, password);
-        this._notifyStatus();
-        return credential.user;
-    },
-
-    async signOut() {
-        if (!this._auth) return;
-        await this._auth.signOut();
-        this._notifyStatus();
-    },
-
     _docId(path) {
-        const uid = this._user?.uid || 'guest';
-        return encodeURIComponent(`${uid}:${path}`);
+        return encodeURIComponent(path);
     },
 
     _playerIdFromPath(path) {
@@ -133,39 +71,30 @@ window.FirebaseSync = {
     },
 
     async _saveNow(path, data) {
-        if (!this.canWrite()) {
-            throw new Error('Not authenticated for cloud write.');
-        }
-
         await this._db.collection('mentalMathsData').doc(this._docId(path)).set({
             path,
             data,
             playerId: this._playerIdFromPath(path),
-            userId: this._user.uid,
             updatedAt: new Date().toISOString()
         }, { merge: true });
     },
 
     async save(path, data) {
-        if (!this.canWrite()) {
+        if (!this.isReady()) {
             this._pendingWrites.push({ path, data });
-            this._notifyStatus();
             return;
         }
-
         try {
             await this._saveNow(path, data);
             console.debug('Cloud sync write ok:', path);
         } catch (error) {
             console.warn('Cloud sync write failed:', path, error);
             this._pendingWrites.push({ path, data });
-            this._notifyStatus();
         }
     },
 
     async flushPendingWrites() {
-        if (!this.canWrite() || this._pendingWrites.length === 0) return;
-
+        if (!this.isReady() || this._pendingWrites.length === 0) return;
         const writes = [...this._pendingWrites];
         this._pendingWrites = [];
 
@@ -177,21 +106,13 @@ window.FirebaseSync = {
                 this._pendingWrites.push(write);
             }
         }
-
-        this._notifyStatus();
     },
 
     async fetchPlayerData(playerId) {
-        if (!this.canWrite() || !playerId) return [];
-
+        if (!this.isReady()) return [];
         try {
-            const snap = await this._db
-                .collection('mentalMathsData')
-                .where('userId', '==', this._user.uid)
-                .where('playerId', '==', playerId)
-                .get();
-
-            return snap.docs.map((doc) => doc.data()).filter((d) => d?.path);
+            const snap = await this._db.collection('mentalMathsData').where('playerId', '==', playerId).get();
+            return snap.docs.map((doc) => doc.data()).filter((d) => d && d.path);
         } catch (error) {
             console.warn('Cloud sync read failed:', error);
             return [];
