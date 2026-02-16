@@ -1,0 +1,62 @@
+{
+  "core": [
+    {
+      "regressionItem": "Player add/select flow remains functional",
+      "testCaseId": "CORE-001"
+    },
+    {
+      "regressionItem": "Section tab toggle updates active state and home hint",
+      "testCaseId": "CORE-002"
+    },
+    {
+      "regressionItem": "Practice session progresses through questions and reaches summary",
+      "testCaseId": "CORE-003"
+    },
+    {
+      "regressionItem": "Firebase settings reflects local-only/auth error states",
+      "testCaseId": "CORE-004"
+    }
+  ],
+  "expansion": [
+    {
+      "regressionItem": "Expansion launch from core app and return to home",
+      "testCaseId": "EXP-001"
+    },
+    {
+      "regressionItem": "Each expansion method screen can be opened",
+      "testCaseId": "EXP-002"
+    }
+  ],
+  "regression": [
+    {
+      "regressionItem": "Historic issue: player flow coverage enforced",
+      "testCaseId": "REG-001",
+      "covers": "CORE-001"
+    },
+    {
+      "regressionItem": "Historic issue: section tab toggle coverage enforced",
+      "testCaseId": "REG-002",
+      "covers": "CORE-002"
+    },
+    {
+      "regressionItem": "Historic issue: practice progression coverage enforced",
+      "testCaseId": "REG-003",
+      "covers": "CORE-003"
+    },
+    {
+      "regressionItem": "Historic issue: Firebase UI state coverage enforced",
+      "testCaseId": "REG-004",
+      "covers": "CORE-004"
+    },
+    {
+      "regressionItem": "Historic issue: expansion launch/back coverage enforced",
+      "testCaseId": "REG-005",
+      "covers": "EXP-001"
+    },
+    {
+      "regressionItem": "Historic issue: expansion method screen coverage enforced",
+      "testCaseId": "REG-006",
+      "covers": "EXP-002"
+    }
+  ]
+}

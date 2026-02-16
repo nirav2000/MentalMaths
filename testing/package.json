@@ -1,0 +1,12 @@
+{
+  "name": "mental-maths-testing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "smoke": "node smoke.mjs",
+    "serve": "node static-server.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

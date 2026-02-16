@@ -251,3 +251,34 @@ Tap the version number at the bottom of any screen to view the full changelog an
 - localStorage-based data layer following a Firestore-like path structure
 - Module pattern: `App` object split across `app-core.js`, `app-quiz.js`, `app-screens.js` using `Object.assign`
 - Service worker with cache-first strategy for offline support
+
+---
+
+## One-click testing
+
+Run the browser-driven smoke suite with (test tooling only; the app itself remains vanilla client-side JS):
+
+```bash
+./testing/run-smoke.sh
+```
+
+### Prerequisites
+
+- Node.js 18+ (used only to run smoke tooling, not by the app at runtime)
+- Smoke assertions execute against real in-browser DOM/UI behavior (vanilla client-side JS app runtime)
+- No Python files are used for testing; the local static server is Node-based.
+- Test dependencies installed once:
+
+```bash
+cd testing && npm install
+```
+
+### Expected output format
+
+The command drives the app UI in a real browser session (main app and expansion routes) and prints a concise pass/fail report grouped into:
+
+- **Core**
+- **Expansion**
+- **Regression**
+
+Each line includes a test case ID (for example `CORE-001`) and status (`PASS`/`FAIL`). The process exits with code `0` when all checks pass, and non-zero when any check fails (CI-friendly behavior).
