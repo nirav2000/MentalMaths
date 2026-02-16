@@ -1,0 +1,493 @@
+/* Progressive Practice Levels CSS */
+
+/* Level Selection Cards */
+.level-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.level-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.level-card:hover {
+  border-color: #42a5f5;
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.2);
+  transform: translateY(-2px);
+}
+
+.level-card.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.level-card.locked:hover {
+  transform: none;
+  border-color: #e0e0e0;
+  box-shadow: none;
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.level-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #42a5f5;
+}
+
+.level-status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.level-status.unlocked {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.level-status.locked {
+  background: #f5f5f5;
+  color: #757575;
+}
+
+.level-card h3 {
+  font-size: 1.15rem;
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.level-examples {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0.5rem 0 0 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Operation Choice */
+.operation-choice {
+  display: flex;
+  gap: 1.5rem;
+  margin: 2rem 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.operation-choice .btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 3rem;
+  min-width: 160px;
+}
+
+.op-icon {
+  font-size: 3rem;
+}
+
+.op-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Practice Header */
+.practice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.practice-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.level-badge,
+.progress-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.level-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.progress-badge {
+  background: #f5f5f5;
+  color: #555;
+}
+
+/* Practice Card */
+.practice-card {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.problem-display {
+  margin-bottom: 2.5rem;
+}
+
+.problem-equation {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #333;
+  font-family: 'Courier New', monospace;
+}
+
+.answer-input-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.answer-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 1.5rem;
+  font-size: 2rem;
+  text-align: center;
+  border: 3px solid #ddd;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: #42a5f5;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
+}
+
+.answer-input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Feedback Area */
+.feedback-area {
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.feedback-correct,
+.feedback-incorrect {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .practice-card {
+    padding: 1.25rem 0.9rem;
+  }
+
+  .problem-equation {
+    font-size: 2.1rem;
+  }
+
+  .answer-input-section {
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .session-stats-mini {
+    gap: 0.5rem;
+  }
+}
+
+.feedback-correct {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 2px solid #66bb6a;
+}
+
+.feedback-incorrect {
+  background: #ffebee;
+  color: #c62828;
+  border: 2px solid #ef5350;
+}
+
+.feedback-icon {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.feedback-correct-anim .feedback-correct,
+.feedback-incorrect-anim .feedback-incorrect {
+  animation: feedbackPop 0.5s ease;
+}
+
+@keyframes feedbackPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Session Stats Mini */
+.session-stats-mini {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  margin-top: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #42a5f5;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+/* Results Screen */
+.results-card {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.results-card h1 {
+  margin-bottom: 2rem;
+}
+
+.results-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin: 2rem 0 3rem 0;
+}
+
+.result-stat-large {
+  text-align: center;
+}
+
+.stat-value-large {
+  font-size: 5rem;
+  font-weight: 700;
+  color: #42a5f5;
+  line-height: 1;
+}
+
+.stat-label-large {
+  font-size: 1.25rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.results-breakdown {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.breakdown-icon {
+  font-size: 1.75rem;
+}
+
+.breakdown-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Unlock Banner */
+.unlock-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 12px;
+  margin: 2rem 0;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.unlock-icon {
+  font-size: 3rem;
+}
+
+.unlock-text {
+  text-align: left;
+}
+
+.unlock-text strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.unlock-text p {
+  margin: 0;
+  color: #555;
+}
+
+/* Encouragement Banner */
+.encouragement-banner {
+  padding: 1.25rem;
+  background: #e3f2fd;
+  border-left: 4px solid #42a5f5;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.encouragement-banner p {
+  margin: 0;
+  color: #1976d2;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Button Groups */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .level-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .operation-choice .btn {
+    padding: 1.5rem 2rem;
+    min-width: 140px;
+  }
+
+  .op-icon {
+    font-size: 2.5rem;
+  }
+
+  .op-name {
+    font-size: 1.1rem;
+  }
+
+  .problem-equation {
+    font-size: 2.25rem;
+  }
+
+  .answer-input {
+    font-size: 1.75rem;
+    padding: 1.25rem;
+  }
+
+  .stat-value-large {
+    font-size: 4rem;
+  }
+
+  .results-breakdown {
+    gap: 1.5rem;
+  }
+
+  .breakdown-item {
+    padding: 0.75rem 1rem;
+  }
+
+  .unlock-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .unlock-text {
+    text-align: center;
+  }
+
+  .session-stats-mini {
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .practice-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .practice-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .operation-choice {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .operation-choice .btn {
+    width: 100%;
+  }
+
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .button-group .btn {
+    width: 100%;
+  }
+}

@@ -242,6 +242,10 @@ The app works fully offline once loaded. It can be installed as a Progressive We
 
 Tap the version number at the bottom of any screen to view the full changelog and access archived versions of the app.
 
+### Release archive policy
+
+Releases must be archived as **full snapshots** in `versions/<semver>/` (not notes-only). For expansion releases, include the full `expansion/` folder plus any changed root app files and a `VERSION_NOTES.md`. See `RELEASE_CHECKLIST.md` for the exact workflow used for each release variation.
+
 ---
 
 ## Technical Notes

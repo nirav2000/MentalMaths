@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expansion Module Diagnostic</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #f5f5f5;
+    }
+    .status-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 4px solid #ccc;
+      background: #f9f9f9;
+    }
+    .test-item.loading {
+      border-left-color: #ffa726;
+    }
+    .test-item.success {
+      border-left-color: #4caf50;
+    }
+    .test-item.error {
+      border-left-color: #f44336;
+    }
+    .error-details {
+      background: #ffebee;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #42a5f5;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn:hover {
+      background: #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-card">
+    <h1>Expansion Module Diagnostic Tool</h1>
+    <p>Testing module loading and initialization...</p>
+  </div>
+
+  <div id="test-results"></div>
+
+  <div class="status-card">
+    <a href="expansion.html" class="btn">Try Loading App</a>
+    <a href="../index.html" class="btn">Back to Main App</a>
+  </div>
+
+  <script type="module">
+    const resultsDiv = document.getElementById('test-results');
+    const tests = [];
+
+    function addTest(name, status, details = '') {
+      const test = { name, status, details, timestamp: new Date() };
+      tests.push(test);
+      renderTests();
+    }
+
+    function renderTests() {
+      resultsDiv.innerHTML = tests.map(test => `
+        <div class="test-item ${test.status}">
+          <strong>${test.name}</strong>
+          <span style="float: right; font-size: 12px;">${test.timestamp.toLocaleTimeString()}</span>
+          ${test.details ? `<div class="error-details">${test.details}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    // Test 1: Basic DOM
+    addTest('DOM Ready', 'success');
+
+    // Test 2: Module loading capability
+    addTest('ES6 Modules Supported', 'loading');
+    try {
+      addTest('ES6 Modules Supported', 'success');
+    } catch (e) {
+      addTest('ES6 Modules Supported', 'error', e.message);
+    }
+
+    // Test 3: LocalStorage
+    addTest('LocalStorage Test', 'loading');
+    try {
+      localStorage.setItem('test', 'value');
+      localStorage.removeItem('test');
+      addTest('LocalStorage Test', 'success');
+    } catch (e) {
+      addTest('LocalStorage Test', 'error', e.message);
+    }
+
+    // Test 4: Config module
+    addTest('Loading expansion-config.js', 'loading');
+    try {
+      const configModule = await import('./js/expansion-config.js');
+      addTest('Loading expansion-config.js', 'success', `Exports: ${Object.keys(configModule).join(', ')}`);
+    } catch (e) {
+      addTest('Loading expansion-config.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 5: Utils module
+    addTest('Loading expansion-utils.js', 'loading');
+    try {
+      const utilsModule = await import('./js/expansion-utils.js');
+      addTest('Loading expansion-utils.js', 'success', `Exports: ${Object.keys(utilsModule).join(', ')}`);
+    } catch (e) {
+      addTest('Loading expansion-utils.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 6: Data models
+    addTest('Loading data-models.js', 'loading');
+    try {
+      const dataModels = await import('./js/data/data-models.js');
+      addTest('Loading data-models.js', 'success', `Exports: ${Object.keys(dataModels).join(', ')}`);
+    } catch (e) {
+      addTest('Loading data-models.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 7: Storage module
+    addTest('Loading expansion-storage.js', 'loading');
+    try {
+      const storageModule = await import('./js/data/expansion-storage.js');
+      addTest('Loading expansion-storage.js', 'success', `Exports: ${Object.keys(storageModule).join(', ')}`);
+
+      // Test loading data
+      addTest('Loading expansion data', 'loading');
+      const data = storageModule.loadExpansionData();
+      addTest('Loading expansion data', 'success', `Version: ${data.version}`);
+    } catch (e) {
+      addTest('Loading expansion-storage.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 8: Navigation module
+    addTest('Loading navigation.js', 'loading');
+    try {
+      const navModule = await import('./js/ui/navigation.js');
+      addTest('Loading navigation.js', 'success', `Exports: ${Object.keys(navModule).join(', ')}`);
+    } catch (e) {
+      addTest('Loading navigation.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 9: Addition practice
+    addTest('Loading addition-practice.js', 'loading');
+    try {
+      const addPractice = await import('./js/facts/addition-practice.js');
+      addTest('Loading addition-practice.js', 'success', `Exports: ${Object.keys(addPractice).join(', ')}`);
+    } catch (e) {
+      addTest('Loading addition-practice.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 10: Subtraction practice
+    addTest('Loading subtraction-practice.js', 'loading');
+    try {
+      const subPractice = await import('./js/facts/subtraction-practice.js');
+      addTest('Loading subtraction-practice.js', 'success', `Exports: ${Object.keys(subPractice).join(', ')}`);
+    } catch (e) {
+      addTest('Loading subtraction-practice.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 11: Fact grid
+    addTest('Loading fact-grid.js', 'loading');
+    try {
+      const factGrid = await import('./js/facts/fact-grid.js');
+      addTest('Loading fact-grid.js', 'success', `Exports: ${Object.keys(factGrid).join(', ')}`);
+    } catch (e) {
+      addTest('Loading fact-grid.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 12: Diagnostics
+    addTest('Loading diagnostic modules', 'loading');
+    try {
+      const diagUI = await import('./js/diagnostics/diagnostic-ui.js');
+      const diagQuiz = await import('./js/diagnostics/diagnostic-quiz.js');
+      const misTracker = await import('./js/diagnostics/misunderstanding-tracker.js');
+      addTest('Loading diagnostic modules', 'success', 'All diagnostic modules loaded');
+    } catch (e) {
+      addTest('Loading diagnostic modules', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 13: Progression rules
+    addTest('Loading progression-rules.js', 'loading');
+    try {
+      const progRules = await import('./js/progress/progression-rules.js');
+      addTest('Loading progression-rules.js', 'success', `Exports: ${Object.keys(progRules).join(', ')}`);
+    } catch (e) {
+      addTest('Loading progression-rules.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 14: Methods
+    addTest('Loading method modules', 'loading');
+    try {
+      const methodSelector = await import('./js/methods/method-selector.js');
+      const methodCards = await import('./js/methods/method-cards.js');
+      addTest('Loading method modules', 'success', 'All method modules loaded');
+    } catch (e) {
+      addTest('Loading method modules', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 15: Problems
+    addTest('Loading problem modules', 'loading');
+    try {
+      const probGen = await import('./js/problems/problem-generator.js');
+      const wordProb = await import('./js/problems/word-problem-engine.js');
+      const wordProbUI = await import('./js/problems/word-problem-ui.js');
+      addTest('Loading problem modules', 'success', 'All problem modules loaded');
+    } catch (e) {
+      addTest('Loading problem modules', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 16: Visuals
+    addTest('Loading visual modules', 'loading');
+    try {
+      const numLine = await import('./js/visuals/number-line.js');
+      const tenFrame = await import('./js/visuals/ten-frames.js');
+      const base10 = await import('./js/visuals/base10-blocks.js');
+      const partWhole = await import('./js/visuals/part-whole-model.js');
+      addTest('Loading visual modules', 'success', 'All visual modules loaded');
+    } catch (e) {
+      addTest('Loading visual modules', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Test 17: Main app module
+    addTest('Loading expansion-app.js', 'loading');
+    try {
+      const appModule = await import('./js/expansion-app.js');
+      addTest('Loading expansion-app.js', 'success', `Exports: ${Object.keys(appModule).join(', ')}`);
+
+      // Check if expansionApp is available globally
+      if (window.expansionApp) {
+        addTest('Global expansionApp object', 'success', 'Available on window');
+      } else {
+        addTest('Global expansionApp object', 'error', 'Not found on window');
+      }
+    } catch (e) {
+      addTest('Loading expansion-app.js', 'error', `${e.message}\n\nStack: ${e.stack}`);
+    }
+
+    // Final summary
+    const successCount = tests.filter(t => t.status === 'success').length;
+    const errorCount = tests.filter(t => t.status === 'error').length;
+    const totalCount = tests.filter(t => t.status !== 'loading').length;
+
+    resultsDiv.insertAdjacentHTML('beforeend', `
+      <div class="status-card" style="margin-top: 20px;">
+        <h2>Summary</h2>
+        <p><strong>${successCount}/${totalCount}</strong> tests passed</p>
+        ${errorCount > 0 ? `<p style="color: #f44336;"><strong>${errorCount} errors found</strong> - See details above</p>` : '<p style="color: #4caf50;">✓ All tests passed! The app should work.</p>'}
+      </div>
+    `);
+  </script>
+</body>
+</html>

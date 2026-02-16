@@ -1,0 +1,578 @@
+/**
+ * Facts Module Styles
+ * Styles for addition and subtraction facts practice, strategy training,
+ * and the 13x13 fact mastery grid.
+ */
+
+/* Strategy List */
+.strategy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.strategy-card {
+  background: var(--color-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.strategy-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateX(4px);
+}
+
+.strategy-card.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-left-color: var(--color-locked);
+}
+
+.strategy-card.unlocked {
+  border-left-color: var(--color-hint);
+  cursor: pointer;
+}
+
+.strategy-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.strategy-info p {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.strategy-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.strategy-status {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Practice Screen */
+.practice-container {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.practice-header {
+  background: var(--color-card);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-indicator {
+  font-size: 1rem;
+  color: var(--color-text-light);
+}
+
+/* Problem Display */
+.problem-display {
+  background: var(--color-card);
+  padding: 3rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.problem-equation {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+  font-family: 'Courier New', monospace;
+}
+
+.problem-equation .operator {
+  color: var(--color-hint);
+  margin: 0 1rem;
+}
+
+/* Answer Input */
+.answer-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.answer-input {
+  font-size: 2.5rem;
+  padding: 1rem;
+  width: 200px;
+  text-align: center;
+  border: 3px solid var(--color-hint);
+  border-radius: var(--border-radius);
+  font-family: 'Courier New', monospace;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.answer-input:focus {
+  border-color: var(--color-secure);
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
+}
+
+.answer-input.correct {
+  border-color: var(--color-correct);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.answer-input.incorrect {
+  border-color: var(--color-incorrect);
+  background-color: rgba(229, 115, 115, 0.1);
+}
+
+.touch-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(78px, 112px));
+  gap: 0.55rem;
+  justify-content: center;
+  margin: 0.4rem auto 0.75rem;
+}
+
+.keypad-key {
+  border: 1px solid #b0bec5;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1.45rem;
+  font-weight: 700;
+  min-height: 58px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.keypad-key:active {
+  background: #e3f2fd;
+  transform: scale(0.96);
+}
+
+.keypad-key[data-key="⌫"] {
+  background: #f5f5f5;
+}
+
+.keypad-key[data-key="✓"] {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.keypad-help {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+}
+
+
+.practice-options {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.practice-option-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.practice-option-toggle input {
+  width: 1rem;
+  height: 1rem;
+}
+/* Buttons */
+.practice-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-submit {
+  background-color: var(--color-hint);
+  font-size: 1.2rem;
+  padding: 1rem 2rem;
+}
+
+.btn-hint {
+  background-color: var(--color-developing);
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+}
+
+/* Feedback */
+.feedback {
+  background: var(--color-card);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  border-left: 4px solid transparent;
+  animation: slideIn 0.3s ease;
+}
+
+.feedback.correct {
+  border-left-color: var(--color-correct);
+  background-color: rgba(76, 175, 80, 0.05);
+  color: var(--color-fluent);
+}
+
+.feedback.incorrect {
+  border-left-color: var(--color-incorrect);
+  background-color: rgba(229, 115, 115, 0.05);
+  color: var(--color-learning);
+}
+
+.feedback.hint {
+  border-left-color: var(--color-hint);
+  background-color: rgba(66, 165, 245, 0.05);
+  color: var(--color-hint);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .problem-display {
+    padding: 1.5rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .problem-equation {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .answer-input {
+    width: min(170px, 100%);
+    font-size: 2rem;
+    padding: 0.75rem;
+  }
+
+  .touch-keypad {
+    grid-template-columns: repeat(3, minmax(86px, 1fr));
+    width: min(100%, 320px);
+    gap: 0.5rem;
+  }
+
+  .keypad-key {
+    min-height: 62px;
+    font-size: 1.5rem;
+  }
+}
+
+/* Session Summary */
+.session-summary {
+  background: var(--color-card);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.summary-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--color-background);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--color-hint);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .problem-equation {
+    font-size: 2rem;
+  }
+
+  .answer-input {
+    font-size: 2rem;
+    width: 150px;
+  }
+
+  .practice-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-submit, .btn-hint {
+    width: 100%;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fact Mastery Grid */
+.fact-grid-container {
+  padding: 1rem;
+}
+
+.grid-header {
+  background: var(--color-card);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.grid-stats h2 {
+  margin: 0 0 1rem 0;
+  color: var(--color-text);
+}
+
+.stat-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.stat-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: white;
+}
+
+.fluency-score {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-hint);
+  margin: 0;
+}
+
+.grid-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  background: var(--color-card);
+}
+
+.fact-grid {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.fact-grid th {
+  background: var(--color-background);
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-text);
+  border: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.fact-grid th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+}
+
+.fact-cell {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.fact-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+.fact-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Fact Popup */
+.fact-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-card);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.fact-popup.hidden {
+  display: none;
+}
+
+.popup-content h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.fact-detail {
+  margin-bottom: 1.5rem;
+}
+
+.fact-detail p {
+  margin: 0.5rem 0;
+  color: var(--color-text);
+}
+
+.inverse-facts {
+  background: var(--color-background);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+}
+
+.inverse-facts p {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+/* Mobile Responsive Grid */
+@media (max-width: 768px) {
+  .grid-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grid-controls {
+    width: 100%;
+  }
+
+  .grid-controls button {
+    width: 100%;
+  }
+
+  .fact-grid {
+    min-width: 400px;
+  }
+
+  .fact-cell {
+    padding: 0.5rem;
+    min-width: 35px;
+    min-height: 35px;
+  }
+
+  .fact-text {
+    font-size: 0.7rem;
+  }
+
+  .fact-grid th {
+    padding: 0.3rem;
+    font-size: 0.8rem;
+  }
+
+  .fact-popup {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fact-grid {
+    min-width: 350px;
+  }
+
+  .fact-cell {
+    padding: 0.3rem;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .fact-text {
+    font-size: 0.6rem;
+  }
+}

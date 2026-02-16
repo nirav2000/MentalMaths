@@ -24,3 +24,8 @@
 5. `expansion/js/data/expansion-storage.js`
 6. `js/versions.js`
 7. `versions/2.26.0/VERSION_NOTES.md`
+
+
+## Snapshot Contents
+- Full `expansion/` source tree at v2.26.0 release time.
+- Root files `style.css` and `js/versions.js` included to preserve release-accurate app behavior/changelog context.
