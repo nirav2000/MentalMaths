@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.20.0',
+        date: '2026-02-16',
+        title: 'Firebase Auth-Backed Cloud Sync Clarity',
+        current: true,
+        changes: [
+            'Added: Firebase Auth (anonymous sign-in) bootstrap so Firestore writes can work with authenticated security rules',
+            'Improved: Firebase sync diagnostics expose readiness/auth state for easier troubleshooting',
+            'Improved: Cloud sync now logs write path and supports immediate retry of queued local writes after auth init',
+            'Updated: Main app version to v1.20.0',
+        ],
+    },
+    {
         version: '1.19.0',
         date: '2026-02-16',
         title: 'Embedded Expansion + PWA/Cloud Sync Foundation',
-        current: true,
+        current: false,
         changes: [
             'Added: Firebase Firestore sync bridge with graceful fallback to local-only mode',
             'Improved: Player selection now attempts cloud-to-local restore before entering home',

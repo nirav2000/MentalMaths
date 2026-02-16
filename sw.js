@@ -1,6 +1,6 @@
 /* sw.js - Service worker for offline PWA support */
 
-const CACHE_NAME = 'mental-maths-v1.19.0-pwa-expansion-firebase';
+const CACHE_NAME = 'mental-maths-v1.20.0-firebase-auth-sync';
 
 const ASSETS = [
     './',

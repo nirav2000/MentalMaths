@@ -5,8 +5,10 @@
 window.FirebaseSync = {
     _db: null,
     _enabled: false,
+    _authReady: false,
+    _pendingWrites: [],
 
-    init() {
+    async init() {
         try {
             if (!window.firebase || !window.firebase.initializeApp) {
                 console.warn('Firebase SDK not available, cloud sync disabled.');
@@ -26,16 +28,37 @@ window.FirebaseSync = {
                 window.firebase.initializeApp(firebaseConfig);
             }
 
+            if (window.firebase.auth) {
+                try {
+                    await window.firebase.auth().signInAnonymously();
+                    this._authReady = true;
+                } catch (authError) {
+                    console.warn('Anonymous auth unavailable. Continuing with Firestore client only:', authError);
+                }
+            }
+
             this._db = window.firebase.firestore();
             this._enabled = true;
+            await this.flushPendingWrites();
+            console.log('Firebase cloud sync enabled.', this.status());
         } catch (error) {
             console.warn('Firebase init failed, cloud sync disabled:', error);
             this._enabled = false;
+            this._authReady = false;
         }
     },
 
     isReady() {
         return this._enabled && !!this._db;
+    },
+
+    status() {
+        return {
+            enabled: this._enabled,
+            authReady: this._authReady,
+            dbReady: !!this._db,
+            queuedWrites: this._pendingWrites.length
+        };
     },
 
     _docId(path) {
@@ -47,17 +70,41 @@ window.FirebaseSync = {
         return match ? match[1] : null;
     },
 
+    async _saveNow(path, data) {
+        await this._db.collection('mentalMathsData').doc(this._docId(path)).set({
+            path,
+            data,
+            playerId: this._playerIdFromPath(path),
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    },
+
     async save(path, data) {
-        if (!this.isReady()) return;
+        if (!this.isReady()) {
+            this._pendingWrites.push({ path, data });
+            return;
+        }
         try {
-            await this._db.collection('mentalMathsData').doc(this._docId(path)).set({
-                path,
-                data,
-                playerId: this._playerIdFromPath(path),
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
+            await this._saveNow(path, data);
+            console.debug('Cloud sync write ok:', path);
         } catch (error) {
-            console.warn('Cloud sync write failed:', error);
+            console.warn('Cloud sync write failed:', path, error);
+            this._pendingWrites.push({ path, data });
+        }
+    },
+
+    async flushPendingWrites() {
+        if (!this.isReady() || this._pendingWrites.length === 0) return;
+        const writes = [...this._pendingWrites];
+        this._pendingWrites = [];
+
+        for (const write of writes) {
+            try {
+                await this._saveNow(write.path, write.data);
+            } catch (error) {
+                console.warn('Cloud sync retry failed:', write.path, error);
+                this._pendingWrites.push(write);
+            }
         }
     },
 
@@ -74,4 +121,3 @@ window.FirebaseSync = {
 };
 
 window.FirebaseSync.init();
-
