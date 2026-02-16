@@ -23,8 +23,24 @@ const Storage = {
         }
     },
 
-    _write(path, data) {
+    _writeLocal(path, data) {
         localStorage.setItem(this._getKey(path), JSON.stringify(data));
+    },
+
+    _write(path, data) {
+        this._writeLocal(path, data);
+        if (window.FirebaseSync?.isReady()) {
+            window.FirebaseSync.save(path, data);
+        }
+    },
+
+    async syncPlayerFromCloud(playerId) {
+        if (!window.FirebaseSync?.isReady() || !playerId) return 0;
+        const cloudDocs = await window.FirebaseSync.fetchPlayerData(playerId);
+        cloudDocs.forEach((doc) => {
+            this._writeLocal(doc.path, doc.data);
+        });
+        return cloudDocs.length;
     },
 
     // ----- Player CRUD -----

@@ -64,6 +64,7 @@
                     <h3 class="expansion-title">Addition & Subtraction Expansion</h3>
                     <p class="expansion-description">Master mental math strategies, practice with larger numbers, and solve word problems!</p>
                     <button id="btn-open-expansion" class="btn btn-primary expansion-btn">Explore Expansion Module →</button>
+                    <a href="expansion/expansion.html" class="expansion-standalone-link">Open expansion standalone page ↗</a>
                 </div>
             </div>
         </div>
@@ -189,6 +190,9 @@
 
     <!-- Load order: config → data → utilities → features → engine → app (core → quiz → screens+boot) -->
     <script src="js/config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-sync.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/generators.js"></script>
     <script src="js/times-tables.js"></script>

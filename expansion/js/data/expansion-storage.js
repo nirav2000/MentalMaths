@@ -6,7 +6,21 @@
 import { createFactMastery } from './data-models.js';
 import { getMasteryLevel } from '../expansion-utils.js';
 
-const STORAGE_KEY = 'mentalMathExpansion';
+const BASE_STORAGE_KEY = 'mentalMathExpansion';
+
+function getMainContext() {
+  try {
+    return JSON.parse(localStorage.getItem('mentalMathMainContext') || 'null');
+  } catch (error) {
+    console.warn('Could not parse main app context:', error);
+    return null;
+  }
+}
+
+function getStorageKey() {
+  const playerId = getMainContext()?.playerId;
+  return playerId ? `${BASE_STORAGE_KEY}_${playerId}` : BASE_STORAGE_KEY;
+}
 
 /**
  * Creates default expansion data structure.
@@ -14,7 +28,7 @@ const STORAGE_KEY = 'mentalMathExpansion';
  */
 function createDefaultData() {
   return {
-    version: '2.26.0',
+    version: '2.27.0',
     additionFacts: {
       strategyGroups: {
         counting_on: { status: 'unlocked', percentComplete: 0 },
@@ -74,7 +88,7 @@ function createDefaultData() {
  */
 export function loadExpansionData() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(getStorageKey());
     if (stored) {
       const data = JSON.parse(stored);
       data.lastAccessed = new Date().toISOString();
@@ -93,7 +107,7 @@ export function loadExpansionData() {
 export function saveExpansionData(data) {
   try {
     data.lastAccessed = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(getStorageKey(), JSON.stringify(data));
   } catch (error) {
     console.error('Error saving expansion data:', error);
   }

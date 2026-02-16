@@ -6,10 +6,23 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.19.0',
+        date: '2026-02-16',
+        title: 'Embedded Expansion + PWA/Cloud Sync Foundation',
+        current: true,
+        changes: [
+            'Added: Firebase Firestore sync bridge with graceful fallback to local-only mode',
+            'Improved: Player selection now attempts cloud-to-local restore before entering home',
+            'Added: Expansion standalone quick link and embedded expansion shell support in the main app',
+            'Improved: Service worker now pre-caches expansion assets and expansion HTML offline fallback',
+            'Updated: Expansion semantic version to v2.27.0 with release notes',
+        ],
+    },
+    {
         version: '1.18.0',
         date: '2026-02-15',
         title: 'Keypad Order + No-Cutoff Mobile Layout',
-        current: true,
+        current: false,
         changes: [
             'Updated: Expansion keypad ordering now matches phone/index layout (1-2-3 top row)',
             'Improved: Quiz layout avoids keypad cutoff on short/mobile screens using compact spacing and dynamic viewport height',

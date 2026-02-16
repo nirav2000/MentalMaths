@@ -1011,6 +1011,15 @@ html, body {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
+.expansion-standalone-link {
+    display: inline-block;
+    margin-top: 0.85rem;
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 0.9rem;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .method-select-list {
     display: grid;
     gap: 10px;

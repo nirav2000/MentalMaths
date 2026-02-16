@@ -1,6 +1,6 @@
 /* config.js - App version and strategy definitions */
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.19.0';
 
 const STRATEGIES = [
     {

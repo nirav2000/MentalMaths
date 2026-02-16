@@ -295,8 +295,15 @@ const App = {
         });
     },
 
-    selectPlayer(player) {
+    async selectPlayer(player) {
         this.currentPlayer = player;
+        if (window.FirebaseSync?.isReady()) {
+            try {
+                await Storage.syncPlayerFromCloud(player.id);
+            } catch (error) {
+                console.warn('Cloud sync restore failed:', error);
+            }
+        }
         this.showScreen('screen-home');
         this.renderHome();
     },
