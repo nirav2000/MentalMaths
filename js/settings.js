@@ -150,6 +150,12 @@ const Settings = {
             if (!email || !password) {
                 throw new Error('Please enter both email and password.');
             }
+            if (password.length < 6) {
+                throw new Error('Password must be at least 6 characters.');
+            }
+            if (!window.FirebaseSync?.signIn || !window.FirebaseSync?.signUp) {
+                throw new Error('Cloud auth is not ready yet. Please wait a moment and try again.');
+            }
             return { email, password };
         };
 

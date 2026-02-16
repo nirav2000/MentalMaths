@@ -6,10 +6,22 @@
 
 const VERSION_HISTORY = [
     {
+        version: '1.23.0',
+        date: '2026-02-16',
+        title: 'Firebase Sign-Up Error Handling Fix',
+        current: true,
+        changes: [
+            'Fixed: Restored FirebaseSync signUp/signIn/signOut APIs expected by the Settings cloud auth UI',
+            'Improved: Added friendly Firebase auth error messages for common signup/login failures',
+            'Improved: Added credential validation guardrails (password length and readiness checks)',
+            'Updated: Main app version to v1.23.0',
+        ],
+    },
+    {
         version: '1.22.0',
         date: '2026-02-16',
         title: 'Force Latest App Version on Load',
-        current: true,
+        current: false,
         changes: [
             'Improved: Service worker registration now aggressively updates and activates new workers immediately',
             'Improved: App reloads once on service worker controller change so users land on latest bundle',
