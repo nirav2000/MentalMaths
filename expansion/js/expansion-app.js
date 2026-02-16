@@ -4,7 +4,7 @@
  */
 
 import { COLOURS, PROGRESSION_LEVELS, METHOD_DEFINITIONS, ADDITION_STRATEGIES, SUBTRACTION_STRATEGIES } from './expansion-config.js';
-import { loadExpansionData } from './data/expansion-storage.js';
+import { loadExpansionData, saveExpansionData } from './data/expansion-storage.js';
 import { startPractice as startAdditionPractice, getNextProblem as getNextAdditionProblem, submitAnswer as submitAdditionAnswer, endPractice as endAdditionPractice, getCurrentSession as getCurrentAdditionSession } from './facts/addition-practice.js';
 import { startPractice as startSubtractionPractice, getNextProblem as getNextSubtractionProblem, submitAnswer as submitSubtractionAnswer, endPractice as endSubtractionPractice, getCurrentSession as getCurrentSubtractionSession } from './facts/subtraction-practice.js';
 import { renderFactGrid } from './facts/fact-grid.js';
@@ -67,6 +67,159 @@ let wordProblemsScreenState = {
   sessionResults: [],
   scaffoldingLevel: 0
 };
+
+const DEFAULT_PRACTICE_PREFERENCES = {
+  autoAdvanceOnCorrect: false,
+  autoFocusInput: true
+};
+
+function getPracticePreferences() {
+  return {
+    ...DEFAULT_PRACTICE_PREFERENCES,
+    ...(expansionData?.preferences?.practice || {})
+  };
+}
+
+function updatePracticePreference(key, value) {
+  if (!expansionData) return;
+
+  expansionData.preferences = expansionData.preferences || {};
+  expansionData.preferences.practice = {
+    ...DEFAULT_PRACTICE_PREFERENCES,
+    ...(expansionData.preferences.practice || {}),
+    [key]: value
+  };
+
+  saveExpansionData(expansionData);
+}
+
+function renderPracticeOptionMenuItems() {
+  const prefs = getPracticePreferences();
+
+  return `
+    <button class="focus-menu-item" id="toggle-auto-advance" aria-pressed="${prefs.autoAdvanceOnCorrect}">
+      ${prefs.autoAdvanceOnCorrect ? '✅' : '⬜️'} Auto-next on correct
+    </button>
+    <button class="focus-menu-item" id="toggle-auto-focus" aria-pressed="${prefs.autoFocusInput}">
+      ${prefs.autoFocusInput ? '✅' : '⬜️'} Auto-focus answer
+    </button>
+  `;
+}
+
+function bindPracticeOptionMenu() {
+  const autoAdvanceToggle = document.getElementById('toggle-auto-advance');
+  const autoFocusToggle = document.getElementById('toggle-auto-focus');
+
+  if (autoAdvanceToggle) {
+    autoAdvanceToggle.addEventListener('click', () => {
+      const prefs = getPracticePreferences();
+      updatePracticePreference('autoAdvanceOnCorrect', !prefs.autoAdvanceOnCorrect);
+      renderScreen(currentScreen);
+    });
+  }
+
+  if (autoFocusToggle) {
+    autoFocusToggle.addEventListener('click', () => {
+      const prefs = getPracticePreferences();
+      updatePracticePreference('autoFocusInput', !prefs.autoFocusInput);
+      renderScreen(currentScreen);
+    });
+  }
+}
+
+function focusAnswerInput() {
+  if (!getPracticePreferences().autoFocusInput) return;
+
+  setTimeout(() => {
+    const input = document.getElementById('answer-input');
+    if (input && !input.disabled) {
+      input.focus();
+      input.select?.();
+    }
+  }, 120);
+}
+
+function renderTouchKeypad(keypadId) {
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'];
+  return `
+    <div class="touch-keypad" id="${keypadId}">
+      ${keys.map((key) => `<button type="button" class="keypad-key" data-key="${key}">${key}</button>`).join('')}
+    </div>
+  `;
+}
+
+function bindTouchKeypad(inputId, keypadId, onEnter = null) {
+  const input = document.getElementById(inputId);
+  const keypad = document.getElementById(keypadId);
+  if (!input || !keypad) return;
+
+  keypad.addEventListener('click', (e) => {
+    const key = e.target?.dataset?.key;
+    if (!key) return;
+
+    if (key === '✓') {
+      if (onEnter) onEnter();
+      return;
+    }
+
+    if (input.disabled) return;
+
+    if (key === '⌫') {
+      input.value = input.value.slice(0, -1);
+    } else {
+      input.value += key;
+    }
+
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+function isPracticeFocusScreen(screenName) {
+  if (screenName === 'addition-facts') {
+    return !!getCurrentAdditionSession();
+  }
+
+  if (screenName === 'subtraction-facts') {
+    return !!getCurrentSubtractionSession();
+  }
+
+  if (screenName === 'levels') {
+    return !!(levelsScreenState.currentProblem && levelsScreenState.currentIndex < levelsScreenState.problemSet.length);
+  }
+
+  if (screenName === 'word-problems') {
+    return !!(wordProblemsScreenState.currentProblem && wordProblemsScreenState.currentIndex < wordProblemsScreenState.problemSet.length);
+  }
+
+  return false;
+}
+
+function setPracticeFocusMode(enabled) {
+  document.body.classList.toggle('practice-focus', enabled);
+}
+
+function setupOverflowMenu(menuButtonId, menuPanelId) {
+  const menuButton = document.getElementById(menuButtonId);
+  const menuPanel = document.getElementById(menuPanelId);
+
+  if (!menuButton || !menuPanel) return;
+
+  if (menuButton.dataset.focusMenuBound === 'true') return;
+  menuButton.dataset.focusMenuBound = 'true';
+
+  const closeMenu = () => menuPanel.classList.remove('is-open');
+
+  menuButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    menuPanel.classList.toggle('is-open');
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!menuPanel.contains(event.target) && event.target !== menuButton) {
+      closeMenu();
+    }
+  }, { passive: true });
+}
 
 /**
  * Initializes the expansion app.
@@ -171,6 +324,8 @@ export function renderScreen(screenName, params = {}) {
       default:
         renderNotFoundScreen(root);
     }
+
+    setPracticeFocusMode(isPracticeFocusScreen(screenName));
     console.log(`Screen ${screenName} rendered successfully`);
   } catch (error) {
     console.error(`Error rendering screen ${screenName}:`, error);
@@ -496,8 +651,18 @@ function renderPracticeScreen(root, operation = 'addition') {
   container.className = 'practice-container';
   container.innerHTML = `
     <div class="practice-header">
+      <button class="focus-back-btn" id="focus-back-btn" aria-label="Back to strategy list">← Back</button>
       <span class="progress-indicator">Question ${session.currentIndex + 1} of ${session.totalProblems}</span>
-      <button class="btn btn-secondary btn-small" id="quit-btn">Quit</button>
+      <div class="focus-actions">
+        <button class="focus-icon-btn" id="hint-btn" aria-label="Show hint" title="Show hint">💡</button>
+        <div class="focus-menu-wrap">
+          <button class="focus-icon-btn" id="practice-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
+          <div class="focus-menu" id="practice-menu">
+            ${renderPracticeOptionMenuItems()}
+            <button class="focus-menu-item" id="quit-btn">Quit Session</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="problem-display">
@@ -511,12 +676,13 @@ function renderPracticeScreen(root, operation = 'addition') {
     </div>
 
     <div class="answer-input-container">
-      <input type="number" id="answer-input" class="answer-input" placeholder="?" autofocus />
+      <input type="number" id="answer-input" class="answer-input" placeholder="?" />
     </div>
 
+    ${renderTouchKeypad('facts-keypad')}
+
     <div class="practice-buttons">
-      <button class="btn btn-submit" id="submit-btn">Submit Answer</button>
-      <button class="btn btn-hint" id="hint-btn">Show Hint</button>
+      <p class="keypad-help">Tap <strong>✓</strong> on keypad to submit.</p>
     </div>
 
     <div id="feedback-area"></div>
@@ -525,12 +691,23 @@ function renderPracticeScreen(root, operation = 'addition') {
   root.appendChild(container);
 
   // Event listeners
-  document.getElementById('submit-btn').addEventListener('click', () => handleSubmit(operation));
+  document.getElementById('focus-back-btn').addEventListener('click', () => {
+    if (isAddition) {
+      endAdditionPractice();
+    } else {
+      endSubtractionPractice();
+    }
+
+    currentProblem = null;
+    showingHint = false;
+    renderScreen(screenName);
+  });
   document.getElementById('hint-btn').addEventListener('click', showHint);
   document.getElementById('quit-btn').addEventListener('click', () => {
     const summary = isAddition ? endAdditionPractice() : endSubtractionPractice();
     renderScreen(screenName, { showSummary: true, summary });
   });
+  setupOverflowMenu('practice-menu-btn', 'practice-menu');
 
   const input = document.getElementById('answer-input');
   input.addEventListener('keypress', (e) => {
@@ -538,10 +715,22 @@ function renderPracticeScreen(root, operation = 'addition') {
       handleSubmit(operation);
     }
   });
+
+  bindPracticeOptionMenu();
+  bindTouchKeypad('answer-input', 'facts-keypad', () => handleSubmit(operation));
+  focusAnswerInput();
+}
+
+function goToNextFactProblem(screenName) {
+  currentProblem = null;
+  showingHint = false;
+  renderScreen(screenName);
 }
 
 function handleSubmit(operation = 'addition') {
   const input = document.getElementById('answer-input');
+  if (input.disabled) return;
+
   const answer = input.value;
 
   if (!answer) return;
@@ -549,6 +738,7 @@ function handleSubmit(operation = 'addition') {
   const isAddition = operation === 'addition';
   const result = isAddition ? submitAdditionAnswer(answer) : submitSubtractionAnswer(answer);
   const screenName = isAddition ? 'addition-facts' : 'subtraction-facts';
+  const preferences = getPracticePreferences();
 
   // Update input styling
   input.className = `answer-input ${result.correct ? 'correct' : 'incorrect'}`;
@@ -561,15 +751,18 @@ function handleSubmit(operation = 'addition') {
       ${result.feedback}
       ${result.correct ? '' : ` You answered ${answer}.`}
       <br><br>
-      <button class="btn btn-primary" id="next-btn">Next Problem</button>
+      ${result.correct && preferences.autoAdvanceOnCorrect
+        ? '<em>Moving to the next problem…</em>'
+        : '<div class="keypad-help"><strong>Tap ✓</strong> for next problem.</div>'}
     </div>
   `;
 
-  document.getElementById('next-btn').addEventListener('click', () => {
-    currentProblem = null;
-    showingHint = false;
-    renderScreen(screenName);
-  });
+  if (result.correct && preferences.autoAdvanceOnCorrect) {
+    setTimeout(() => goToNextFactProblem(screenName), 900);
+    return;
+  }
+
+  bindTouchKeypad('answer-input', 'facts-keypad', () => goToNextFactProblem(screenName));
 }
 
 function showHint() {
@@ -770,20 +963,27 @@ function renderPracticeProblem(root) {
 
   root.innerHTML = `
     <div class="practice-header">
-      <div class="practice-info">
-        <span class="level-badge">Level ${level}</span>
-        <span class="progress-badge">Problem ${progress} / ${total}</span>
+      <button class="focus-back-btn" id="back-to-level-select" aria-label="Back to level selection">← Back</button>
+      <div class="practice-info focus-practice-info">
+        <span class="progress-badge">Level ${level} • Problem ${progress} / ${total}</span>
       </div>
-      <button class="btn btn-secondary btn-small" id="end-practice">End Practice</button>
+      <div class="focus-menu-wrap">
+        <button class="focus-icon-btn" id="levels-menu-btn" aria-label="Practice options" title="Practice options">⋯</button>
+        <div class="focus-menu" id="levels-menu">
+          ${renderPracticeOptionMenuItems()}
+          <button class="focus-menu-item" id="end-practice">End Practice</button>
+        </div>
+      </div>
     </div>
     <div class="card practice-card">
       <div class="problem-display">
         <div class="problem-equation">${a} ${operation} ${b} = ?</div>
       </div>
       <div class="answer-input-section">
-        <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" autofocus />
-        <button class="btn btn-primary btn-large" id="submit-answer">Check Answer</button>
+        <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" />
       </div>
+      ${renderTouchKeypad('levels-keypad')}
+      <p class="keypad-help">Tap <strong>✓</strong> on keypad to check / continue.</p>
       <div id="feedback-area" class="feedback-area"></div>
     </div>
     <div class="session-stats-mini">
@@ -802,7 +1002,25 @@ function renderPracticeProblem(root) {
     </div>
   `;
 
+  let awaitingNext = false;
+
+  const goToNextProblem = () => {
+    levelsScreenState.currentIndex++;
+    if (levelsScreenState.currentIndex < levelsScreenState.problemSet.length) {
+      levelsScreenState.currentProblem = levelsScreenState.problemSet[levelsScreenState.currentIndex];
+      renderScreen('levels');
+    } else {
+      renderScreen('levels');
+    }
+  };
+
   const submitAnswer = () => {
+    if (awaitingNext) {
+      goToNextProblem();
+      return;
+    }
+
+    const preferences = getPracticePreferences();
     const userAnswer = parseInt(document.getElementById('answer-input').value);
     if (isNaN(userAnswer)) return;
 
@@ -826,20 +1044,16 @@ function renderPracticeProblem(root) {
       feedbackArea.className = 'feedback-area feedback-incorrect-anim';
     }
 
-    document.getElementById('submit-answer').textContent = 'Next Problem →';
-    document.getElementById('submit-answer').onclick = () => {
-      levelsScreenState.currentIndex++;
-      if (levelsScreenState.currentIndex < levelsScreenState.problemSet.length) {
-        levelsScreenState.currentProblem = levelsScreenState.problemSet[levelsScreenState.currentIndex];
-        renderScreen('levels');
-      } else {
-        renderScreen('levels');
-      }
-    };
+    if (correct && preferences.autoAdvanceOnCorrect) {
+      setTimeout(goToNextProblem, 900);
+    } else {
+      awaitingNext = true;
+      feedbackArea.insertAdjacentHTML('beforeend', '<div class="keypad-help"><strong>Tap ✓</strong> for next problem.</div>');
+    }
+
     document.getElementById('answer-input').disabled = true;
   };
 
-  document.getElementById('submit-answer').addEventListener('click', submitAnswer);
   document.getElementById('answer-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') submitAnswer();
   });
@@ -852,8 +1066,15 @@ function renderPracticeProblem(root) {
       renderScreen('levels');
     }
   });
+  document.getElementById('back-to-level-select').addEventListener('click', () => {
+    levelsScreenState = { level: null, operation: null, difficulty: 'medium', currentProblem: null, problemSet: [], currentIndex: 0, sessionResults: [], startTime: null, selectedMethod: null };
+    renderScreen('levels');
+  });
+  setupOverflowMenu('levels-menu-btn', 'levels-menu');
 
-  setTimeout(() => document.getElementById('answer-input').focus(), 100);
+  bindPracticeOptionMenu();
+  bindTouchKeypad('answer-input', 'levels-keypad', submitAnswer);
+  focusAnswerInput();
 }
 
 function renderPracticeResults(root) {
@@ -1002,11 +1223,16 @@ function renderWordProblemPractice(root) {
   const header = document.createElement('div');
   header.className = 'practice-header';
   header.innerHTML = `
-    <div class="practice-info">
-      <span class="level-badge">${categoryInfo.name}</span>
-      <span class="progress-badge">Problem ${currentIndex + 1} / ${problemSet.length}</span>
+    <button class="focus-back-btn" id="back-word-categories" aria-label="Back to categories">← Back</button>
+    <div class="practice-info focus-practice-info">
+      <span class="progress-badge">${categoryInfo.name} • ${currentIndex + 1} / ${problemSet.length}</span>
     </div>
-    <button class="btn btn-secondary btn-small" id="end-word-practice">End Session</button>
+    <div class="focus-menu-wrap">
+      <button class="focus-icon-btn" id="word-menu-btn" aria-label="Session options" title="Session options">⋯</button>
+      <div class="focus-menu" id="word-menu">
+        <button class="focus-menu-item" id="end-word-practice">End Session</button>
+      </div>
+    </div>
   `;
   root.appendChild(header);
 
@@ -1046,6 +1272,11 @@ function renderWordProblemPractice(root) {
       renderScreen('word-problems');
     }
   });
+  document.getElementById('back-word-categories').addEventListener('click', () => {
+    wordProblemsScreenState = { category: null, level: 3, difficulty: 'medium', currentProblem: null, problemSet: [], currentIndex: 0, sessionResults: [], scaffoldingLevel: 0 };
+    renderScreen('word-problems');
+  });
+  setupOverflowMenu('word-menu-btn', 'word-menu');
 }
 
 function renderWordProblemSessionResults(root) {
@@ -1422,6 +1653,16 @@ function renderVisualDemoScreen(root) {
         <h2>Number Line Visual</h2>
         <p>Shows counting on, sequencing, and compensation with animated jumps.</p>
         <div id="number-line-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="interactive-problem" id="number-line-problem">Jump from 7 by +3. Where do you land?</div>
+          <div class="interactive-instructions">Tap a number on the line to show where your jump lands, or type it in the box.</div>
+          <div class="interactive-actions">
+            <input type="number" id="number-line-answer" class="demo-input" placeholder="Enter landing number" />
+            <button class="btn btn-primary" id="check-number-line">Check</button>
+            <button class="btn btn-secondary" id="new-number-line">New Question</button>
+          </div>
+          <div class="interactive-feedback" id="number-line-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-counting-on">Demo: Counting On (7+3)</button>
           <button class="btn btn-primary" id="demo-sequencing">Demo: Sequencing (347+256)</button>
@@ -1431,8 +1672,23 @@ function renderVisualDemoScreen(root) {
 
       <div class="visual-demo-card">
         <h2>Ten Frame Visual</h2>
-        <p>Shows number bonds and making 10 strategy with animated dots.</p>
+        <p>Shows number bonds and making 10 strategy with animated dots, plus an interactive partition challenge.</p>
         <div id="ten-frame-demo" class="visual-container"></div>
+        <div class="interactive-ten-frame-panel" id="ten-frame-panel">
+          <div class="interactive-problem" id="ten-frame-problem">Build the model for: <span class="part-a">7</span> + <span class="part-b">5</span></div>
+          <div class="interactive-instructions">Choose a part, then tap squares to build each part.</div>
+          <div class="interactive-section-buttons">
+            <button class="btn btn-small part-a-btn" id="select-part-a">Select Part A</button>
+            <button class="btn btn-small part-b-btn" id="select-part-b">Select Part B</button>
+          </div>
+          <div class="interactive-status" id="ten-frame-status"></div>
+          <div class="interactive-feedback" id="ten-frame-feedback"></div>
+          <div class="interactive-actions">
+            <button class="btn btn-primary" id="check-ten-frame">Check Parts</button>
+            <button class="btn btn-secondary" id="reset-ten-frame">Reset</button>
+            <button class="btn btn-secondary" id="new-ten-frame">New Problem</button>
+          </div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-make-10">Demo: Make 10 (7+5)</button>
           <button class="btn btn-primary" id="demo-add-dots">Demo: Add 8 Dots</button>
@@ -1443,7 +1699,24 @@ function renderVisualDemoScreen(root) {
       <div class="visual-demo-card">
         <h2>Base-10 Blocks Visual</h2>
         <p>Shows place value with colored blocks (ones, tens, hundreds, thousands).</p>
+        <div class="visual-style-tabs" id="base10-style-tabs">
+          <button class="visual-tab active" data-style="classic">Classic</button>
+          <button class="visual-tab" data-style="pastel">Pastel</button>
+          <button class="visual-tab" data-style="high-contrast">High Contrast</button>
+          <button class="visual-tab" data-style="outline">Outline</button>
+        </div>
         <div id="base10-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="interactive-problem" id="base10-problem">How many hundreds, tens, and ones are in 347?</div>
+          <div class="interactive-actions multi-input">
+            <label>H <input type="number" id="base10-hundreds" class="demo-input small" min="0" /></label>
+            <label>T <input type="number" id="base10-tens" class="demo-input small" min="0" /></label>
+            <label>O <input type="number" id="base10-ones" class="demo-input small" min="0" /></label>
+            <button class="btn btn-primary" id="check-base10">Check</button>
+            <button class="btn btn-secondary" id="new-base10">New Number</button>
+          </div>
+          <div class="interactive-feedback" id="base10-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-show-number">Demo: Show 347</button>
           <button class="btn btn-primary" id="demo-break-ten">Demo: Break Ten</button>
@@ -1455,6 +1728,19 @@ function renderVisualDemoScreen(root) {
         <h2>Part-Whole Model Visual</h2>
         <p>Shows number bonds and fact families with cherry diagram.</p>
         <div id="part-whole-demo" class="visual-container"></div>
+        <div class="interactive-panel">
+          <div class="visual-style-tabs" id="part-whole-mode-tabs">
+            <button class="visual-tab active" data-mode="missing-part2">Missing Part</button>
+            <button class="visual-tab" data-mode="missing-whole">Missing Whole</button>
+          </div>
+          <div class="interactive-problem" id="part-whole-problem">Find the missing part: 12 = 7 + ?</div>
+          <div class="interactive-actions">
+            <input type="number" id="part-whole-answer" class="demo-input" placeholder="Missing part" />
+            <button class="btn btn-primary" id="check-part-whole">Check</button>
+            <button class="btn btn-secondary" id="new-part-whole">New Question</button>
+          </div>
+          <div class="interactive-feedback" id="part-whole-feedback"></div>
+        </div>
         <div class="demo-controls">
           <button class="btn btn-primary" id="demo-show-pw">Demo: Show 12 = 7 + 5</button>
           <button class="btn btn-primary" id="demo-split">Demo: Split Animation</button>
@@ -1468,6 +1754,66 @@ function renderVisualDemoScreen(root) {
   const numberLineCon = document.getElementById('number-line-demo');
   let numberLine = new NumberLineVisual(numberLineCon, { min: 0, max: 20, start: 7 });
   numberLine.render();
+
+  const numberLineProblemEl = document.getElementById('number-line-problem');
+  const numberLineFeedbackEl = document.getElementById('number-line-feedback');
+  const numberLineAnswerEl = document.getElementById('number-line-answer');
+  const numberLineQuestions = [
+    { start: 7, jump: 3 },
+    { start: 12, jump: 5 },
+    { start: 9, jump: 4 },
+    { start: 15, jump: -6 },
+    { start: 18, jump: -7 }
+  ];
+  let numberLineQuestion = numberLineQuestions[0];
+
+  const setNumberLineQuestion = (q) => {
+    numberLineQuestion = q;
+    numberLineProblemEl.textContent = `Jump from ${q.start} by ${q.jump >= 0 ? '+' : ''}${q.jump}. Where do you land?`;
+    numberLineFeedbackEl.textContent = '';
+    numberLineFeedbackEl.className = 'interactive-feedback';
+    numberLineAnswerEl.value = '';
+
+    numberLine = new NumberLineVisual(numberLineCon, {
+      min: Math.max(0, Math.min(q.start, q.start + q.jump) - 2),
+      max: Math.max(q.start, q.start + q.jump) + 2,
+      start: q.start
+    });
+    numberLine.render();
+
+    numberLine.enableSelection((selectedValue) => {
+      numberLine.clear();
+      numberLine.highlight(q.start, '#42A5F5');
+      numberLine.addJump(q.start, selectedValue, `${selectedValue - q.start >= 0 ? '+' : ''}${selectedValue - q.start}`, '#42A5F5');
+      numberLine.highlight(selectedValue, '#FF9800');
+      numberLineAnswerEl.value = selectedValue;
+    });
+  };
+
+  setNumberLineQuestion(numberLineQuestion);
+
+  document.getElementById('check-number-line').addEventListener('click', () => {
+    const value = parseInt(numberLineAnswerEl.value, 10);
+    if (Number.isNaN(value)) {
+      numberLineFeedbackEl.textContent = 'Enter a number first.';
+      numberLineFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const correct = numberLineQuestion.start + numberLineQuestion.jump;
+    if (value === correct) {
+      numberLineFeedbackEl.textContent = 'Correct! Great number line thinking.';
+      numberLineFeedbackEl.className = 'interactive-feedback success';
+    } else {
+      numberLineFeedbackEl.textContent = `Not yet. The landing number is ${correct}.`;
+      numberLineFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-number-line').addEventListener('click', () => {
+    const q = numberLineQuestions[Math.floor(Math.random() * numberLineQuestions.length)];
+    setNumberLineQuestion(q);
+  });
 
   document.getElementById('demo-counting-on').addEventListener('click', () => {
     numberLine.clear();
@@ -1497,47 +1843,245 @@ function renderVisualDemoScreen(root) {
   let tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
   tenFrame.render(0);
 
+  const tenFrameProblemEl = document.getElementById('ten-frame-problem');
+  const tenFrameStatusEl = document.getElementById('ten-frame-status');
+  const tenFrameFeedbackEl = document.getElementById('ten-frame-feedback');
+  const partABtn = document.getElementById('select-part-a');
+  const partBBtn = document.getElementById('select-part-b');
+
+  const interactiveProblems = [
+    { a: 7, b: 5 },
+    { a: 6, b: 4 },
+    { a: 8, b: 3 },
+    { a: 9, b: 6 },
+    { a: 4, b: 7 }
+  ];
+  let interactiveProblem = interactiveProblems[0];
+
+  const updateSectionButtons = (activeSection) => {
+    partABtn.className = `btn btn-small part-a-btn ${activeSection === 'a' ? 'active' : ''}`;
+    partBBtn.className = `btn btn-small part-b-btn ${activeSection === 'b' ? 'active' : ''}`;
+  };
+
+  const updateInteractiveStatus = (summary) => {
+    if (!summary) return;
+
+    tenFrameStatusEl.textContent = `Part A: ${summary.countA}/${summary.a} • Part B: ${summary.countB}/${summary.b} • Total selected: ${summary.countTotal}/${summary.total}`;
+    updateSectionButtons(summary.activeSection);
+  };
+
+  const startInteractiveProblem = (problem) => {
+    interactiveProblem = problem;
+    tenFrameProblemEl.innerHTML = `Build the model for: <span class="part-a">${problem.a}</span> + <span class="part-b">${problem.b}</span>`;
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
+
+    tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
+    tenFrame.renderInteractivePartition(problem.a, problem.b, {
+      activeSection: 'a',
+      onChange: updateInteractiveStatus
+    });
+  };
+
+  startInteractiveProblem(interactiveProblem);
+
+  partABtn.addEventListener('click', () => {
+    tenFrame.setInteractiveSection('a');
+    updateSectionButtons('a');
+  });
+
+  partBBtn.addEventListener('click', () => {
+    tenFrame.setInteractiveSection('b');
+    updateSectionButtons('b');
+  });
+
+  document.getElementById('check-ten-frame').addEventListener('click', () => {
+    const summary = tenFrame.getInteractiveSummary();
+    if (!summary) return;
+
+    if (!summary.isComplete) {
+      tenFrameFeedbackEl.textContent = `Keep going — you still need to select ${summary.total - summary.countTotal} more square(s).`;
+      tenFrameFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    if (summary.isCorrect) {
+      tenFrameFeedbackEl.textContent = `Great partition! ${summary.a} + ${summary.b} is modelled correctly.`;
+      tenFrameFeedbackEl.className = 'interactive-feedback success';
+    } else {
+      tenFrameFeedbackEl.textContent = `Close! You selected A=${summary.countA} and B=${summary.countB}. Target is A=${summary.a}, B=${summary.b}.`;
+      tenFrameFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('reset-ten-frame').addEventListener('click', () => {
+    tenFrame.clearInteractiveSelections();
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
+  });
+
+  document.getElementById('new-ten-frame').addEventListener('click', () => {
+    const randomProblem = interactiveProblems[Math.floor(Math.random() * interactiveProblems.length)];
+    startInteractiveProblem(randomProblem);
+  });
+
   document.getElementById('demo-make-10').addEventListener('click', () => {
     tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#E57373', '#42A5F5'] });
     tenFrame.animateMake10(7, 5);
+    tenFrameStatusEl.textContent = 'Demo mode running: watch how 7 + 5 is regrouped into 10 + 2.';
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
   });
 
   document.getElementById('demo-add-dots').addEventListener('click', () => {
     tenFrame = new TenFrameVisual(tenFrameCon, { colours: ['#4CAF50', '#42A5F5'] });
     tenFrame.render(0);
     setTimeout(() => tenFrame.animateAdd(8, '#4CAF50'), 300);
+    tenFrameStatusEl.textContent = 'Demo mode running: adding 8 dots one at a time.';
+    tenFrameFeedbackEl.textContent = '';
+    tenFrameFeedbackEl.className = 'interactive-feedback';
   });
 
   document.getElementById('demo-clear-frame').addEventListener('click', () => {
-    tenFrame = new TenFrameVisual(tenFrameCon);
-    tenFrame.render(0);
+    startInteractiveProblem(interactiveProblem);
   });
 
   // Base-10 Blocks demos
   const base10Con = document.getElementById('base10-demo');
-  let base10 = new Base10Visual(base10Con);
+  const base10Styles = {
+    classic: {
+      unitSize: 20,
+      colours: { ones: '#42A5F5', tens: '#FF9800', hundreds: '#66BB6A', thousands: '#9C27B0' }
+    },
+    pastel: {
+      unitSize: 20,
+      colours: { ones: '#90caf9', tens: '#ffcc80', hundreds: '#a5d6a7', thousands: '#ce93d8' }
+    },
+    'high-contrast': {
+      unitSize: 22,
+      colours: { ones: '#1565C0', tens: '#EF6C00', hundreds: '#2E7D32', thousands: '#6A1B9A' }
+    },
+    outline: {
+      unitSize: 18,
+      blockStyle: 'outline',
+      strokeColor: '#455A64',
+      colours: { ones: '#1E88E5', tens: '#FB8C00', hundreds: '#43A047', thousands: '#8E24AA' }
+    }
+  };
+  let selectedBase10Style = 'classic';
+  let base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
   base10.renderNumber(0);
 
+  const base10ProblemEl = document.getElementById('base10-problem');
+  const base10FeedbackEl = document.getElementById('base10-feedback');
+  const inputHundreds = document.getElementById('base10-hundreds');
+  const inputTens = document.getElementById('base10-tens');
+  const inputOnes = document.getElementById('base10-ones');
+  const base10Questions = [347, 529, 804, 116, 990];
+  let base10Question = base10Questions[0];
+
+  const setBase10Question = (value) => {
+    base10Question = value;
+    base10ProblemEl.textContent = `How many hundreds, tens, and ones are in ${value}?`;
+    base10FeedbackEl.textContent = '';
+    base10FeedbackEl.className = 'interactive-feedback';
+    inputHundreds.value = '';
+    inputTens.value = '';
+    inputOnes.value = '';
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
+    base10.renderNumber(value);
+  };
+
+  setBase10Question(base10Question);
+
   document.getElementById('demo-show-number').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(347);
   });
 
   document.getElementById('demo-break-ten').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(15);
     setTimeout(() => base10.animateBreak('tens'), 500);
   });
 
   document.getElementById('demo-clear-blocks').addEventListener('click', () => {
-    base10 = new Base10Visual(base10Con);
+    base10 = new Base10Visual(base10Con, base10Styles[selectedBase10Style]);
     base10.renderNumber(0);
+  });
+
+  document.querySelectorAll('#base10-style-tabs .visual-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      selectedBase10Style = tab.dataset.style;
+      document.querySelectorAll('#base10-style-tabs .visual-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      setBase10Question(base10Question);
+    });
+  });
+
+  document.getElementById('check-base10').addEventListener('click', () => {
+    const h = parseInt(inputHundreds.value, 10);
+    const t = parseInt(inputTens.value, 10);
+    const o = parseInt(inputOnes.value, 10);
+    if ([h, t, o].some(Number.isNaN)) {
+      base10FeedbackEl.textContent = 'Fill in all three place values.';
+      base10FeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const ch = Math.floor(base10Question / 100);
+    const ct = Math.floor((base10Question % 100) / 10);
+    const co = base10Question % 10;
+    if (h === ch && t === ct && o === co) {
+      base10FeedbackEl.textContent = 'Correct place value breakdown!';
+      base10FeedbackEl.className = 'interactive-feedback success';
+    } else {
+      base10FeedbackEl.textContent = `Try again: ${base10Question} = ${ch} hundreds, ${ct} tens, ${co} ones.`;
+      base10FeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-base10').addEventListener('click', () => {
+    setBase10Question(base10Questions[Math.floor(Math.random() * base10Questions.length)]);
   });
 
   // Part-Whole Model demos
   const partWholeCon = document.getElementById('part-whole-demo');
   let partWhole = new PartWholeVisual(partWholeCon);
   partWhole.render(0, 0, 0);
+
+  const partWholeProblemEl = document.getElementById('part-whole-problem');
+  const partWholeFeedbackEl = document.getElementById('part-whole-feedback');
+  const partWholeAnswerEl = document.getElementById('part-whole-answer');
+  const partWholeQuestions = [
+    { whole: 12, part: 7 },
+    { whole: 15, part: 9 },
+    { whole: 18, part: 11 },
+    { whole: 14, part: 6 },
+    { whole: 16, part: 8 }
+  ];
+  let partWholeMode = 'missing-part2';
+  let partWholeQuestion = partWholeQuestions[0];
+
+  const setPartWholeQuestion = (q) => {
+    partWholeQuestion = q;
+    if (partWholeMode === 'missing-whole') {
+      partWholeProblemEl.textContent = `Find the whole: ? = ${q.part} + ${q.whole - q.part}`;
+    } else {
+      partWholeProblemEl.textContent = `Find the missing part: ${q.whole} = ${q.part} + ?`;
+    }
+    partWholeFeedbackEl.textContent = '';
+    partWholeFeedbackEl.className = 'interactive-feedback';
+    partWholeAnswerEl.value = '';
+    partWhole = new PartWholeVisual(partWholeCon);
+    if (partWholeMode === 'missing-whole') {
+      partWhole.renderBlank({ whole: null, part1: q.part, part2: q.whole - q.part }, 'whole');
+    } else {
+      partWhole.renderBlank({ whole: q.whole, part1: q.part, part2: null }, 'part2');
+    }
+  };
+
+  setPartWholeQuestion(partWholeQuestion);
 
   document.getElementById('demo-show-pw').addEventListener('click', () => {
     partWhole = new PartWholeVisual(partWholeCon);
@@ -1552,6 +2096,49 @@ function renderVisualDemoScreen(root) {
   document.getElementById('demo-clear-pw').addEventListener('click', () => {
     partWhole = new PartWholeVisual(partWholeCon);
     partWhole.render(0, 0, 0);
+  });
+
+  document.getElementById('check-part-whole').addEventListener('click', () => {
+    const value = parseInt(partWholeAnswerEl.value, 10);
+    if (Number.isNaN(value)) {
+      partWholeFeedbackEl.textContent = 'Enter the missing part first.';
+      partWholeFeedbackEl.className = 'interactive-feedback warning';
+      return;
+    }
+
+    const correct = partWholeMode === 'missing-whole'
+      ? partWholeQuestion.whole
+      : partWholeQuestion.whole - partWholeQuestion.part;
+    if (value === correct) {
+      partWholeFeedbackEl.textContent = partWholeMode === 'missing-whole'
+        ? 'Correct! You found the whole.'
+        : 'Correct! You found the missing part.';
+      partWholeFeedbackEl.className = 'interactive-feedback success';
+      partWhole = new PartWholeVisual(partWholeCon);
+      partWhole.render(
+        partWholeQuestion.whole,
+        partWholeQuestion.part,
+        partWholeQuestion.whole - partWholeQuestion.part
+      );
+    } else {
+      partWholeFeedbackEl.textContent = partWholeMode === 'missing-whole'
+        ? `Not quite. The whole is ${correct}.`
+        : `Not quite. The missing part is ${correct}.`;
+      partWholeFeedbackEl.className = 'interactive-feedback error';
+    }
+  });
+
+  document.getElementById('new-part-whole').addEventListener('click', () => {
+    setPartWholeQuestion(partWholeQuestions[Math.floor(Math.random() * partWholeQuestions.length)]);
+  });
+
+  document.querySelectorAll('#part-whole-mode-tabs .visual-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      partWholeMode = tab.dataset.mode;
+      document.querySelectorAll('#part-whole-mode-tabs .visual-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      setPartWholeQuestion(partWholeQuestion);
+    });
   });
 }
 

@@ -9,6 +9,8 @@ export class Base10Visual {
     this.options = {
       unitSize: options.unitSize || 20,
       gap: options.gap || 4,
+      strokeColor: options.strokeColor || '#fff',
+      blockStyle: options.blockStyle || 'solid',
       colours: {
         ones: '#42A5F5',      // Blue
         tens: '#FF9800',      // Orange
@@ -190,8 +192,7 @@ export class Base10Visual {
     rect.setAttribute('y', y);
     rect.setAttribute('width', this.options.unitSize);
     rect.setAttribute('height', this.options.unitSize);
-    rect.setAttribute('fill', this.options.colours.ones);
-    rect.setAttribute('stroke', '#fff');
+    this.applyBlockStyle(rect, this.options.colours.ones);
     rect.setAttribute('stroke-width', '1');
     rect.setAttribute('rx', '2');
     return rect;
@@ -204,8 +205,7 @@ export class Base10Visual {
     rect.setAttribute('y', y);
     rect.setAttribute('width', this.options.unitSize);
     rect.setAttribute('height', this.options.unitSize * 10);
-    rect.setAttribute('fill', this.options.colours.tens);
-    rect.setAttribute('stroke', '#fff');
+    this.applyBlockStyle(rect, this.options.colours.tens);
     rect.setAttribute('stroke-width', '2');
     rect.setAttribute('rx', '3');
     return rect;
@@ -218,8 +218,7 @@ export class Base10Visual {
     rect.setAttribute('y', y);
     rect.setAttribute('width', 100);
     rect.setAttribute('height', 100);
-    rect.setAttribute('fill', this.options.colours.hundreds);
-    rect.setAttribute('stroke', '#fff');
+    this.applyBlockStyle(rect, this.options.colours.hundreds);
     rect.setAttribute('stroke-width', '2');
     rect.setAttribute('rx', '4');
     return rect;
@@ -235,8 +234,7 @@ export class Base10Visual {
     front.setAttribute('y', y + 20);
     front.setAttribute('width', size);
     front.setAttribute('height', size);
-    front.setAttribute('fill', this.options.colours.thousands);
-    front.setAttribute('stroke', '#fff');
+    this.applyBlockStyle(front, this.options.colours.thousands);
     front.setAttribute('stroke-width', '2');
 
     // Top face (3D effect)
@@ -244,7 +242,7 @@ export class Base10Visual {
     top.setAttribute('points', `${x},${y + 20} ${x + 20},${y} ${x + size + 20},${y} ${x + size},${y + 20}`);
     top.setAttribute('fill', this.options.colours.thousands);
     top.setAttribute('opacity', '0.8');
-    top.setAttribute('stroke', '#fff');
+    top.setAttribute('stroke', this.options.strokeColor);
     top.setAttribute('stroke-width', '2');
 
     // Right face (3D effect)
@@ -252,7 +250,7 @@ export class Base10Visual {
     right.setAttribute('points', `${x + size},${y + 20} ${x + size + 20},${y} ${x + size + 20},${y + size} ${x + size},${y + size + 20}`);
     right.setAttribute('fill', this.options.colours.thousands);
     right.setAttribute('opacity', '0.6');
-    right.setAttribute('stroke', '#fff');
+    right.setAttribute('stroke', this.options.strokeColor);
     right.setAttribute('stroke-width', '2');
 
     g.appendChild(top);
@@ -266,6 +264,16 @@ export class Base10Visual {
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('class', className);
     return g;
+  }
+
+  applyBlockStyle(el, colour) {
+    if (this.options.blockStyle === 'outline') {
+      el.setAttribute('fill', 'none');
+      el.setAttribute('stroke', colour);
+    } else {
+      el.setAttribute('fill', colour);
+      el.setAttribute('stroke', this.options.strokeColor);
+    }
   }
 
   createText(x, y, text, fill, fontSize = '14px', fontWeight = 'normal') {

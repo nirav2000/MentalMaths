@@ -17,6 +17,9 @@ const App = {
     isDailyChallenge: false,
     exportMenuOpen: false,
     activeSection: 'number-sense',
+    isExpansionMode: false,
+    selectedExpansionMethod: null,
+    expansionBridge: null,
 
     init() {
         document.querySelectorAll('[id^="version-"]').forEach(el => {
@@ -32,17 +35,183 @@ const App = {
     // ----- PWA -----
 
     registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
-        }
+        if (!('serviceWorker' in navigator)) return;
+
+        let hasRefreshedForSW = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (hasRefreshedForSW) return;
+            hasRefreshedForSW = true;
+            window.location.reload();
+        });
+
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+            .then((registration) => {
+                const promoteWaitingWorker = () => {
+                    if (registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                };
+
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            promoteWaitingWorker();
+                        }
+                    });
+                });
+
+                if (registration.waiting) {
+                    promoteWaitingWorker();
+                }
+
+                setInterval(() => registration.update(), 60 * 1000);
+            })
+            .catch((error) => {
+                console.warn('Service worker registration failed:', error);
+            });
     },
 
     // ----- Navigation -----
 
     showScreen(id) {
+        this.clearTransientScreenUI();
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         const el = document.getElementById(id);
         if (el) el.classList.add('active');
+        this.isExpansionMode = id === 'screen-expansion';
+    },
+
+    clearTransientScreenUI() {
+        const visualEl = document.getElementById('quiz-visual');
+        if (visualEl) {
+            visualEl.innerHTML = '';
+            visualEl.classList.add('hidden');
+        }
+
+        const hintEl = document.getElementById('quiz-hint');
+        if (hintEl) {
+            hintEl.textContent = '';
+            hintEl.classList.add('hidden');
+        }
+
+        const stepDisplayEl = document.getElementById('step-display');
+        if (stepDisplayEl) {
+            stepDisplayEl.innerHTML = '';
+            stepDisplayEl.classList.add('hidden');
+        }
+    },
+
+    handleBack() {
+        if (this.isExpansionMode) {
+            const expansionRoot = document.getElementById('expansion-root');
+            if (window.expansionApp && expansionRoot && expansionRoot.innerHTML) {
+                window.expansionApp.renderScreen('home');
+            }
+            this.showScreen('screen-home');
+            this.renderHome();
+            this.isExpansionMode = false;
+            return;
+        }
+
+        if (document.getElementById('screen-method-select')?.classList.contains('active')) {
+            this.showScreen('screen-home');
+            this.renderHome();
+            return;
+        }
+
+        if (document.getElementById('screen-quiz')?.classList.contains('active')) {
+            this.quitQuiz();
+            return;
+        }
+
+        if (
+            document.getElementById('screen-stats')?.classList.contains('active') ||
+            document.getElementById('screen-settings')?.classList.contains('active') ||
+            document.getElementById('screen-goals')?.classList.contains('active') ||
+            document.getElementById('screen-teacher')?.classList.contains('active') ||
+            document.getElementById('screen-versions')?.classList.contains('active') ||
+            document.getElementById('screen-summary')?.classList.contains('active')
+        ) {
+            this.showScreen(this.currentPlayer ? 'screen-home' : 'screen-welcome');
+            if (this.currentPlayer) this.renderHome();
+            return;
+        }
+
+        this.showScreen('screen-welcome');
+    },
+
+    async ensureExpansionBridge() {
+        if (this.expansionBridge) return this.expansionBridge;
+
+        const wordProblemModule = await import('../expansion/js/problems/word-problem-ui.js');
+        this.expansionBridge = {
+            renderWordProblem: wordProblemModule.renderWordProblem
+        };
+        return this.expansionBridge;
+    },
+
+    async loadExpansionModule() {
+        const shell = document.getElementById('expansion-shell');
+        if (!shell) return;
+
+        if (shell.dataset.loaded !== 'true') {
+            const response = await fetch('./expansion/expansion.html');
+            const html = await response.text();
+            const parsed = new DOMParser().parseFromString(html, 'text/html');
+
+            parsed.querySelectorAll('head link[rel="stylesheet"]').forEach((link) => {
+                const href = link.getAttribute('href');
+                if (!href) return;
+                const absoluteHref = href.startsWith('http') ? href : `./expansion/${href.replace(/^\.\//, '')}`;
+                const existing = document.querySelector(`link[data-expansion-style="${absoluteHref}"]`);
+                if (existing) return;
+                const styleLink = document.createElement('link');
+                styleLink.rel = 'stylesheet';
+                styleLink.href = absoluteHref;
+                styleLink.dataset.expansionStyle = absoluteHref;
+                document.head.appendChild(styleLink);
+            });
+
+            const bodyNodes = [...parsed.body.children].filter((node) => node.tagName !== 'SCRIPT');
+            shell.innerHTML = '';
+            bodyNodes.forEach((node) => shell.appendChild(document.importNode(node, true)));
+
+            const backLink = shell.querySelector('.back-link');
+            if (backLink) {
+                backLink.href = '#';
+                backLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.handleBack();
+                });
+            }
+
+            shell.dataset.loaded = 'true';
+            await import('../expansion/js/expansion-app.js');
+        }
+
+        if (this.currentPlayer) {
+            localStorage.setItem('mentalMathMainContext', JSON.stringify({
+                playerId: this.currentPlayer.id,
+                playerName: this.currentPlayer.name,
+                selectedMethod: this.selectedExpansionMethod
+            }));
+
+            const expansionHeader = shell.querySelector('.expansion-header h1');
+            if (expansionHeader) {
+                expansionHeader.textContent = `Mental Math Expansion — ${this.currentPlayer.name}`;
+            }
+        }
+    },
+
+    async launchExpansion() {
+        await this.loadExpansionModule();
+        this.showScreen('screen-expansion');
+        this.isExpansionMode = true;
+        if (window.expansionApp?.renderScreen) {
+            window.expansionApp.renderScreen('home');
+        }
     },
 
     // ----- Events -----
@@ -60,6 +229,8 @@ const App = {
             this.currentPlayer = null;
             this.showScreen('screen-welcome');
         });
+        document.getElementById('btn-open-expansion').addEventListener('click', () => this.showMethodSelect());
+        document.getElementById('btn-expansion-home').addEventListener('click', () => this.showMethodSelect());
         document.getElementById('btn-practice').addEventListener('click', () => {
             if (this.activeSection === 'times-tables') {
                 TimesTables.ensureProgress(this.currentPlayer.id);
@@ -82,7 +253,7 @@ const App = {
         });
 
         // Quiz
-        document.getElementById('btn-quit-quiz').addEventListener('click', () => this.quitQuiz());
+        document.getElementById('btn-quit-quiz').addEventListener('click', () => this.handleBack());
         document.getElementById('numpad').addEventListener('click', e => {
             const btn = e.target.closest('.numpad-btn');
             if (btn) this.handleNumpad(btn.dataset.val);
@@ -95,27 +266,26 @@ const App = {
         });
 
         // Stats
-        document.getElementById('btn-back-home').addEventListener('click', () => this.showScreen('screen-home'));
+        document.getElementById('btn-back-home').addEventListener('click', () => this.handleBack());
         document.getElementById('btn-export-data').addEventListener('click', () => this.toggleExportMenu());
 
         // Settings
-        document.getElementById('btn-back-from-settings').addEventListener('click', () => this.showScreen('screen-home'));
+        document.getElementById('btn-back-from-settings').addEventListener('click', () => this.handleBack());
 
         // Goals
-        document.getElementById('btn-back-from-goals').addEventListener('click', () => this.showScreen('screen-home'));
+        document.getElementById('btn-back-from-goals').addEventListener('click', () => this.handleBack());
+
+        // Method select
+        document.getElementById('btn-back-from-method-select').addEventListener('click', () => this.handleBack());
 
         // Teacher dashboard
-        document.getElementById('btn-back-from-teacher').addEventListener('click', () => {
-            this.showScreen(this.currentPlayer ? 'screen-home' : 'screen-welcome');
-        });
+        document.getElementById('btn-back-from-teacher').addEventListener('click', () => this.handleBack());
 
         // Version history
         document.querySelectorAll('.version-link').forEach(el => {
             el.addEventListener('click', () => this.showVersions());
         });
-        document.getElementById('btn-back-from-versions').addEventListener('click', () => {
-            this.showScreen(this.currentPlayer ? 'screen-home' : 'screen-welcome');
-        });
+        document.getElementById('btn-back-from-versions').addEventListener('click', () => this.handleBack());
 
         // Keyboard
         document.addEventListener('keydown', e => {
@@ -159,8 +329,15 @@ const App = {
         });
     },
 
-    selectPlayer(player) {
+    async selectPlayer(player) {
         this.currentPlayer = player;
+        if (window.FirebaseSync?.isReady()) {
+            try {
+                await Storage.syncPlayerFromCloud(player.id);
+            } catch (error) {
+                console.warn('Cloud sync restore failed:', error);
+            }
+        }
         this.showScreen('screen-home');
         this.renderHome();
     },

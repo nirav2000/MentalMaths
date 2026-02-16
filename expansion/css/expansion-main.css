@@ -33,6 +33,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-text);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -66,6 +67,7 @@ body {
 /* Main Content */
 #expansion-root {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
 }
@@ -577,6 +579,192 @@ body {
 
   .expansion-footer {
     margin-bottom: 0;
+  }
+}
+
+/* ========================================
+   Practice Focus Mode
+   ======================================== */
+body.practice-focus .expansion-header {
+  display: none;
+}
+
+body.practice-focus .breadcrumb-container {
+  display: none;
+}
+
+body.practice-focus #expansion-root {
+  padding-top: 0.2rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.3rem;
+}
+
+body.practice-focus .card {
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+}
+
+body.practice-focus .practice-container,
+body.practice-focus .practice-card,
+body.practice-focus .word-problem-container {
+  margin: 0 auto;
+}
+
+body.practice-focus .problem-display {
+  padding: 1rem 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+body.practice-focus .problem-equation {
+  margin-bottom: 0.6rem;
+  line-height: 1.1;
+  font-size: clamp(1.8rem, 5.8vw, 2.4rem);
+}
+
+body.practice-focus .answer-input-container,
+body.practice-focus .answer-input-section,
+body.practice-focus .word-problem-answer-section {
+  margin-bottom: 0.55rem;
+  gap: 0.55rem;
+  padding: 0.7rem;
+}
+
+body.practice-focus .touch-keypad {
+  margin: 0.25rem auto 0.45rem;
+  gap: 0.4rem;
+}
+
+body.practice-focus .keypad-help {
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+body.practice-focus .feedback {
+  margin-top: 0.55rem;
+  padding: 0.8rem;
+}
+
+body.practice-focus .session-stats-mini {
+  margin-top: 0.35rem;
+  gap: 0.35rem;
+}
+
+body.practice-focus .practice-header {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #fff;
+  margin: 0 -0.5rem 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.practice-focus .practice-info {
+  flex: 1;
+  min-width: 0;
+}
+
+body.practice-focus .progress-indicator,
+body.practice-focus .progress-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.focus-back-btn,
+.focus-icon-btn {
+  border: none;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 999px;
+  min-height: 40px;
+  min-width: 40px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.focus-back-btn {
+  padding: 0 0.9rem;
+}
+
+.focus-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.focus-menu-wrap {
+  position: relative;
+}
+
+.focus-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  min-width: 150px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  padding: 0.35rem;
+}
+
+.focus-menu.is-open {
+  display: block;
+}
+
+.focus-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.focus-menu-item:hover {
+  background: #f5f7fb;
+}
+
+@media (max-width: 768px) {
+  body.practice-focus #expansion-root {
+    padding-top: 0.15rem;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+    padding-bottom: 0.2rem;
+  }
+
+  body.practice-focus .session-stats-mini {
+    margin-top: 0.25rem;
+  }
+
+  body.practice-focus .bottom-nav {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  body.practice-focus .practice-header {
+    margin-bottom: 0.45rem;
+    padding: 0.4rem;
+  }
+
+  body.practice-focus .session-stats-mini {
+    display: none;
+  }
+
+  body.practice-focus .focus-back-btn,
+  body.practice-focus .focus-icon-btn {
+    min-height: 36px;
+    min-width: 36px;
+    font-size: 0.85rem;
   }
 }
 

@@ -21,6 +21,7 @@ export class NumberLineVisual {
     this.lineGroup = null;
     this.jumpsGroup = null;
     this.highlightsGroup = null;
+    this.tickOverlayGroup = null;
   }
 
   /**
@@ -40,10 +41,12 @@ export class NumberLineVisual {
     this.lineGroup = this.createGroup('line-group');
     this.jumpsGroup = this.createGroup('jumps-group');
     this.highlightsGroup = this.createGroup('highlights-group');
+    this.tickOverlayGroup = this.createGroup('tick-overlay-group');
 
     this.svg.appendChild(this.lineGroup);
     this.svg.appendChild(this.jumpsGroup);
     this.svg.appendChild(this.highlightsGroup);
+    this.svg.appendChild(this.tickOverlayGroup);
 
     // Draw the horizontal line
     const padding = 60;
@@ -175,6 +178,42 @@ export class NumberLineVisual {
   clear() {
     this.jumpsGroup.innerHTML = '';
     this.highlightsGroup.innerHTML = '';
+  }
+
+  /**
+   * Enables clickable tick overlays for interactive selection.
+   * @param {(value:number)=>void} onSelect - Callback for selected value
+   */
+  enableSelection(onSelect) {
+    if (!this.tickOverlayGroup) return;
+
+    this.tickOverlayGroup.innerHTML = '';
+    const range = this.options.max - this.options.min;
+    const tickCount = Math.floor(range / this.options.tickInterval) + 1;
+    const lineY = this.options.height / 2;
+
+    for (let i = 0; i < tickCount; i++) {
+      const value = this.options.min + (i * this.options.tickInterval);
+      const x = this.valueToX(value);
+      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      hit.setAttribute('cx', x);
+      hit.setAttribute('cy', lineY);
+      hit.setAttribute('r', '14');
+      hit.setAttribute('class', 'number-line-hit-area');
+      hit.setAttribute('tabindex', '0');
+      hit.setAttribute('aria-label', `Select ${value}`);
+
+      const selectValue = () => onSelect(value);
+      hit.addEventListener('click', selectValue);
+      hit.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectValue();
+        }
+      });
+
+      this.tickOverlayGroup.appendChild(hit);
+    }
   }
 
   /**
