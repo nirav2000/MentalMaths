@@ -1,5 +1,11 @@
 # Release Checklist
 
+## Mandatory versioning & push rule
+
+- **Use semantic versioning (`MAJOR.MINOR.PATCH`) for every release-facing update.**
+- **Every push that changes release behavior must include a version bump, a matching archive in `versions/<semver>/`, and an updated version-history entry in `js/versions.js`.**
+- **Do not push release changes unless all three are updated together: live app version markers, `versions/<semver>/` snapshot, and changelog/version history metadata.**
+
 ## Archive policy (source of truth)
 
 - **Every release entry in `js/versions.js` must have a matching full snapshot under `versions/<semver>/`.**

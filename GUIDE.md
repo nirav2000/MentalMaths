@@ -246,6 +246,8 @@ Tap the version number at the bottom of any screen to view the full changelog an
 
 Releases must be archived as **full snapshots** in `versions/<semver>/` (not notes-only). For expansion releases, include the full `expansion/` folder plus any changed root app files and a `VERSION_NOTES.md`. See `RELEASE_CHECKLIST.md` for the exact workflow used for each release variation.
 
+Release rule: use semantic versioning for release-facing changes, and push only when the live version markers, `versions/<semver>/` archive snapshot, and `js/versions.js` version history are updated together.
+
 ---
 
 ## Technical Notes
